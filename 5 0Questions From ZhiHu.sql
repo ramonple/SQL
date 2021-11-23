@@ -1,6 +1,6 @@
 -- 重点题目： Q12， Q17, Q18, Q23,Q35, Q40, Q41
--- CANNOT run wind function with this version of MySql
--- Related Q: 22, 25
+-- CANNOT run window function with this version of MySql. WILL update in another file.
+-- Window funtion: Q: 22, 25
 
 
 -- 11 查询至少有一门课与学号为“01”的学生所学课程相同的学生的学号和姓名（重点）
