@@ -1,0 +1,260 @@
+1. REGEXP
+
+REGEXP is the operator used when performing regular expression pattern matches.
+REGEXP and LIKE are used to totally different cases.LIKE is used to add wildcards to a string.
+MySQL REGEXP performs a pattern match of a string expression against a pattern. The pattern is supplied as an argument.
+
+If the pattern finds a match in the expression, the function returns 1, else it returns 0.
+If either expression or pattern is NULL, the function returns NULL.
+
+Pattern	   What the Pattern matches
+^	         caret(^) matches Beginning of string
+$	         End of string
+*	         Zero or more instances of string preceding it
++	         One or more instances of strings preceding it
+.	         Any single character
+?	         Match zero or one instances of the strings preceding it.
+[abc]	     Any character listed between the square brackets
+[^abc]	   Any character not listed between the square brackets
+[A-Z]     match any upper case letter.
+[a-z]    	match any lower case letter
+[0-9]	    match any digit from 0 through to 9.
+[[:<:]]	  matches the beginning of words.
+[[:>:]]	  matches the end of words.
+[:class:]	matches a character class i.e. [:alpha:] to match letters, [:space:] to match white space, [:punct:] is match punctuations and [:upper:] for upper class letters.
+p1|p2|p3	Alternation; matches any of the patterns p1, p2, or p3
+{n}	      n instances of preceding element
+{m,n}	    m through n instances of preceding element
+
+Examples with explanation :
+
+a. Match beginning of string(^):
+Gives all the names starting with ‘sa’.Example- sam,samarth.
+SELECT name FROM student_tbl WHERE name REGEXP '^sa';
+
+b. Match the end of a string($):
+Gives all the names ending with ‘on’.Example – norton,merton.
+SELECT name FROM student_tbl WHERE name REGEXP 'on$';
+
+c. Match zero or one instance of the strings preceding it(?):
+Gives all the titles containing ‘com’.Example – comedy , romantic comedy.
+SELECT title FROM movies_tbl WHERE title REGEXP 'com?'
+
+d. Matches any of the patterns p1, p2, or p3 (p1|p2|p3):
+Gives all the names containing ‘be’ or ‘ae’.Example – Abel, Baer.
+SELECT name FROM student_tbl WHERE name REGEXP 'be|ae' ;
+
+e. Matches any character listed between the square brackets ([abc]):
+Gives all the names containing ‘j’ or ‘z’. Example – Lorentz, Rajs.
+
+f. Matches any lower case letter between ‘a’ to ‘z’- ([a-z]) ([a-z] and (.)):
+Retrieve all names that contain a letter in the range of ‘b’ and ‘g’, followed by any character, 
+followed by the letter ‘a’. Example – Tobias, sewall.
+Matches any single character(.)
+SELECT name FROM student_tbl WHERE name REGEXP '[b-g].[a]' ;
+
+g. Mathcees all names start with vowel character (a,e,i,o,u) and ends with 'ok'.
+SELECT name FROM student_tbl WHERE name REGEXP '^[aeiou]ok$' ;
+
+
+
+
+
+
+2. Date Function
+
+https://www.geeksforgeeks.org/sql-date-functions-set-1/?ref=lbp
+https://www.geeksforgeeks.org/sql-date-functions-set-2/?ref=lbp
+https://www.geeksforgeeks.org/sql-date-functions/?ref=lbp
+
+1. ADDDATE(): 
+It returns a date after a certain time/date interval has been added.
+Syntax: SELECT ADDTIME("2018-07-16 02:52:47", "2");
+Output: 2018-07-16 02:52:49
+
+2. ADDTIME(): 
+It returns a time / date time after a certain time interval has been added.
+Syntax: SELECT ADDTIME("2017-06-15 09:34:21", "2");
+Output: 2017-06-15 09:34:23
+
+3. CURDATE(): 
+It returns the current date.
+Syntax: SELECT CURDATE();
+Output: 2021-11-24
+CURRENT_DATE(): 
+It returns the current date.
+Syntax: SELECT CURRENT_DATE();
+Output: 2021-11-24
+
+4. CURRENT_TIME(): 
+It returns the current time.
+Syntax: SELECT CURRENT_TIME();
+Output: 16:20:17
+
+5. CURRENT_TIMESTAMP(): 
+It returns the current date and time.
+Syntax: SELECT CURRENT_TIMESTAMP();
+Output: 2021-11-24 16:21:04
+
+6. CURTIME(): 
+It returns the current time.
+
+7. DATE(): 
+It extracts the date value from a date or date time expression.
+Syntax: SELECT DATE("2017-06-15");
+Output: 2017-06-15
+Syntax: SELECT CURTIME();
+
+8. DATEDIFF(): 
+It returns the difference in days between two date values.
+Syntax: SELECT DATEDIFF("2017-06-25", "2017-06-15");
+Output: 10
+
+9. DATE_ADD(): 
+It returns a date after a certain time/date interval has been added.
+Syntax: SELECT DATE_ADD("2018-07-16", INTERVAL 10 DAY);
+Output: 2018-07-16
+
+10. DATE_FORMAT(): 
+It formats a date as specified by a format mask.
+Syntax: SELECT DATE_FORMAT("2018-06-15", "%Y");
+Output: 2018
+
+11. DATE_SUB(): 
+It returns a date earlier than a certain time/date. sub for subtraction.
+Syntax: SELECT DATE_SUB("2017-06-15", INTERVAL 10 DAY);
+Output: 2017-06-05
+
+12. DAY():
+It returns the day portion of a date value.
+Syntax: SELECT DAY("2018-07-16");
+Output: 16
+
+13. DAYNAME(): 
+It returns the weekday name for a date.
+Syntax: SELECT DAYNAME('2008-05-15');
+Output: Thursday
+
+14. DAYOFMONTH(): 
+It returns the day portion of a date value.
+Syntax: SELECT DAYOFMONTH('2018-07-16');
+Output: 16
+
+15. DAYWEEK(): 
+It returns the weekday index for a date value.
+Syntax: SELECT WEEKDAY("2018-07-16");
+Output: 0
+
+16. DAYOFYEAR(): 
+It returns the day of the year for a date value.
+Syntax: SELECT DAYOFYEAR("2018-07-16");
+Output: 197
+
+17. EXTRACT(): It extracts parts from a date.
+Syntax: SELECT EXTRACT(MONTH FROM "2018-07-16");
+Output: 7
+
+18. FROM_DAYS(): 
+It returns a date value from a numeric representation of the day.
+Syntax: SELECT FROM_DAYS(685467);
+Output: 1876-09-29
+
+19. HOUR(): 
+It returns the hour portion of a date value.
+Syntax: SELECT HOUR("2018-07-16 09:34:00");
+Output: 9
+
+20. LAST_DAY(): 
+It returns the last day of the month for a given date.
+Syntax: SELECT LAST_DAY('2018-07-16');
+Output: 2018-07-31
+
+21. LOCALTIME(): 
+It returns the current date and time.
+Syntax: SELECT LOCALTIME();
+Output: 2018-07-16 02:56:42
+
+22. LOCALTIMESTAMP(): 
+It returns the current date and time.
+Syntax: SELECT LOCALTIMESTAMP();
+Output: 2018-07-16 02:56:48
+
+23. MAKEDATE(): 
+It returns the date for a certain year and day-of-year value.
+Syntax: SELECT MAKEDATE(2009, 138);
+Output: 2009-05-18
+
+24. MAKETIME(): 
+It returns the time for a certain hour, minute, second combination.
+Syntax: SELECT MAKETIME(11, 35, 4);
+Output: 11:35:04
+
+
+Day function
+
+1. EXTRACT(): 
+Returns a single part of a date/time. Syntax:
+EXTRACT(unit FROM date);
+
+2. DATE(): 
+Extracts the date part of a date or date/time expression.
+
+3. DATE_ADD() : 
+Adds a specified time interval to a date
+Syntax: DATE_ADD(date, INTERVAL expr type);
+
+4. DATE_SUB(): 
+Subtracts a specified time interval from a date. Syntax for DATE_SUB is same as DATE_ADD just the difference is that DATE_SUB is used to subtract a given interval of date.
+
+5. DATEDIFF(): 
+Returns the number of days between two dates.Syntax:
+DATEDIFF(date1, date2);
+
+
+
+
+
+3. SQL functions
+
+a. Aggregate functions
+AVG(): SELECT AVG(column_name) FROM table_name;
+COUNT(): SELECT COUNT(column_name) FROM table_name;
+FIRST(): returns the first value of the selected column. SELECT FIRST(column_name) FROM table_name;
+LAST(): returns the last value of the selected column. SELECT LAST(column_name) FROM table_name;
+MAX(): SELECT MAX(column_name) FROM table_name;
+MIN(): SELECT MIN(column_name) FROM table_name;
+SUM(): SELECT SUM(MARKS) AS TotalMarks FROM Students;
+
+b. Scalar functions:
+UCASE(): It converts the value of a field to uppercase. SELECT UCASE(NAME) FROM Students;
+LCASE(): It converts the value of a field to lowercase. SELECT LCASE(column_name) FROM table_name;
+MID(): The MID() function extracts texts from the text field. SELECT MID(column_name,start,length) AS some_name FROM table_name;
+LEN(): The LEN() function returns the length of the value in a text field. SELECT LENGTH(column_name) FROM table_name;
+ROUND(): The ROUND() function is used to round a numeric field to the number of decimals specified. SELECT ROUND(column_name,decimals) FROM table_name; 
+                                                                                                    SELECT ROUND(MARKS,0) FROM table_name; 
+NOW(): The NOW() function returns the current system date and time. SELECT NOW() FROM table_name;
+                                                                    SELECT NAME, NOW() AS DateTime FROM Students; 
+FORMAT(): The FORMAT() function is used to format how a field is to be displayed. SELECT FORMAT(column_name,format) FROM table_name; 
+                                                                                  SELECT NAME, FORMAT(Now(),'YYYY-MM-DD') AS Date FROM Students; 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
