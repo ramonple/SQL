@@ -1,6 +1,11 @@
 https://zhuanlan.zhihu.com/p/265247944
 
 185 & 262 are two hard problems, but I also find other questions challenging.
+importance: 
+a. Should better understand the self join
+b. Not always we must use 'where' clause. I can use ON when we join tables. 
+   For example A Join B ON a.id=b.userid and b.userid > 10;
+    
 
 -- 175. Combine Two Tables
 In this question, it requires ' If the address of a personId is not present in the Address table, report 'null' instead'.
