@@ -1,5 +1,7 @@
 https://zhuanlan.zhihu.com/p/265247944
 
+Free questions:
+
 -- 175. Combine Two Tables
 In this question, it requires ' If the address of a personId is not present in the Address table, report 'null' instead'.
 In this situation, we need to use LEFT JOIN.
@@ -134,3 +136,78 @@ from customers
 where customers.id NOT IN (
 select customers.id
 from customers JOIN orders ON customers.id=orders.customerid)
+
+-- 184. Department Highest Salary
+-- Write an SQL query to find employees who have the highest salary in each of the departments.
+-- Return the result table in any order.
+
+In this question, we should do a new syntax:
+where (a,b) IN (c,d) where (c,d) can be replaced by a whole query
+
+select department.name AS 'department', employee.name as 'employee',employee.salary
+from employee JOIN department ON employee.departmentid=department.id
+where (employee.departmentid,employee.salary) IN
+( select employee.departmentid, max(employee.salary)
+from employee
+group by employee.departmentid ); -- through doing so, we can find the maximum salary of each department
+
+
+-- 185. Department Top Three Salaries (HARD)
+-- A company's executives are interested in seeing who earns the most money in each of the company's departments. 
+-- A high earner in a department is an employee who has a salary in the top three unique salaries for that department.
+-- Write an SQL query to find the employees who are high earners in each of the departments.
+
+In this question, it requires 'unique salary'. THis means we should apply to the Dense_Rank
+first we need to rank the salary in each department and then find the employees in each department are in top 3
+
+select a.*
+from (
+select e.name as 'Employee', d.name as 'Department',e.salary as 'Salary',
+       Dense_Rank () OVER (partition by e.departmentid order by e.salary DESC) as 'Rank'
+from employee e JOIN department d ON e.departmentid=d.id ) as a
+where a.Rank <= 3
+
+-- 196. Delete Duplicate Emails
+-- Write an SQL query to delete all the duplicate emails, keeping only one unique email with the smallest id.
+
+-- self join syntax:
+Select column_names(s)
+From table T1, table T2
+Where condition
+
+for example, if the table a is  1  a
+                                2  b
+				3. c
+first, we should know what table we will get after running 
+select *
+from table a, table b
+
+after running this, we will get 1 a 1 a
+                                2 b 1 a
+				3 c 1 a
+				1 a 2 b
+				2 b 2 b
+				3 c 2 b
+				1 a 3 c
+				2 b 3 c
+				3 c 3 c
+If there is no duplication, after running 
+select *
+from table a, table b
+where a.column2=b.column 2
+we can only get: 1 a 1 a 
+                 2 b 2 b
+		 3 c 3 c
+however, if there exists duplications, for example a=c
+we will have   1 a 1 a
+               1 a 3 a
+	       2 b 2 b
+	       3 a 1 a
+	       3 a 3 a
+Then, go back to the question, we want to save the unique smaller id, thus we can do a reserve thing, we delete the duplicated larger id
+that is 
+Delete *
+from table a, table b
+where a.column2=b.column 2 AND a.column1 > b.column 1
+
+
