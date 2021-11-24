@@ -1,0 +1,213 @@
+https://zhuanlan.zhihu.com/p/265247944
+
+Free questions:
+
+-- 175. Combine Two Tables
+In this question, it requires ' If the address of a personId is not present in the Address table, report 'null' instead'.
+In this situation, we need to use LEFT JOIN.
+
+Select firstname, lastname,city,state
+From Person LEFT JOIN Address
+ON Person.PersonId=Address.PersonId
+Order by firstName
+
+ -- 176. Second Highest Salary
+ Write an SQL query to report the second highest salary from the Employee table. 
+ If there is no second highest salary, the query should report null.
+ The importance is how to deal with 'when there is no second highest then shows NULL'.
+ < IFNULL> function
+ SELECT IFNULL(xxxxx, "yyy") as YourNameIt; if not null, output corresponding value, if null ouput ''yyyy''
+ here the xxxx can be a complete <select..from..order by.. limite..offset.. section>
+ <OFFSET> 
+ OFFSET  Number of rows to skip  e.g., OFFSET 1
+ <Limit>
+If a limit count is given, no more than that many rows will be returned
+
+SELECT
+    IFNULL(
+      (SELECT DISTINCT Salary
+       FROM Employee
+       ORDER BY Salary DESC
+        LIMIT 1 OFFSET 1),
+    NULL) AS SecondHighestSalary
+    
+    
+-- 177. Nth Highest Salary
+Write an SQL query to report the nth highest salary from the Employee table. If there is no nth highest salary, the query should report null
+Similar as the one above, the importance is how to output the null.
+after trying, I found MySQL cannot directly calculate the value of n-1. Thus, we need to find help from the function.
+To relize this, we need to use the FUNCTION.
+
+CREATE FUNCTION yourFunctionName(Variable INT) RETURNS INT -- INT is the data type
+BEGIN
+SET N=N-1; -- here you can do your own setting
+  RETURN (
+      # Write your MySQL query statement below.
+      SELECT
+        IFNULL(
+          (SELECT DISTINCT salary
+          FROM Employee
+          ORDER BY salary DESC
+          LIMIT 1 OFFSET N),
+            NULL) AS nthhisghestsalary --  this part is the same as the one did in 176
+  );
+END
+
+-- 178. Rank Scores
+Write an SQL query to rank the scores. The ranking should be calculated according to the following rules:
+a.The scores should be ranked from the highest to the lowest.
+b.If there is a tie between two scores, both should have the same ranking.
+c.After a tie, the next ranking number should be the next consecutive integer value. In other words, there should be no holes between ranks.
+d.Return the result table ordered by score in descending order.
+
+Create Table Scores
+(id int, score decimal(10,2), Primary Key (id));
+
+When creating the table, we should focus on the decimals, it should be decimal (p,s) such as decimal(10,2).
+p is the precision which is the maximum total number of decimal digits that will be stored, both to the left and to the right of the decimal point.
+s is the scale which is the number of decimal digits that will be stored to the right of the decimal point.
+
+select score, Dense_RANK() OVER (order by score DESC) as "RANK"
+from scores
+
+DISTINGUISH:  RANK DENSE_RANK Row_number
+RANK: 113446
+DENSE_RANK:112334
+Row_number: 12345
+
+- [180. Consecutive Numbers} !!!
+Write an SQL query to find all numbers that appear at least three times consecutively.
+Return the result table in any order.
+
+Approach: Using DISTINCT and WHERE clause [Accepted]
+
+Consecutive appearing means the Id of the Num are next to each others. Since this problem asks for numbers appearing at least three times 
+consecutively, we can use 3 aliases for this table Logs, and then check whether 3 consecutive numbers are all the same.
+
+select DISTINCT l1.num AS consecutiveNumbers
+from logs as l1,
+     logs as l2,
+	  	logs as l3
+Where l1.id = l2.id - 1
+AND l2.id=l3.id-1
+And l1.num=l2.num
+And l2.num=l3.num
+
+-- Answer from Discussion
+SELECT DISTINCT t.num AS ConsecutiveNums
+FROM
+(
+SELECT Num AS num, LEAD(Num) OVER (ORDER BY Id) AS 'lead', LAG(Num) OVER (ORDER BY Id) AS 'lag'
+From Logs
+) AS t
+WHERE t.num = t.lead and t.num = t.lag
+
+-- LEAD() is a window function. by using the LEAD() function, from the current row, you can access the data of the [following] row.
+-- LAG: by using the LAG() function, from the current row, you can access data of the [previous] row
+
+-- Syntax: LAG (scalar_expression [,offset] [,default])  OVER ( [ partition_by_clause ] order_by_clause ) 
+-- offset: The number of rows back from the current row from which to obtain a value. If not specified, the default is 1. 
+-- default: The value to return when offset is beyond the scope of the partition. If a default value is not specified, NULL is returned.
+
+-- 181. Employees Earning More Than Their Managers
+The Employee table holds all employees including their managers. Every employee has an Id, and there is also a column for the manager Id.
+- first, i need to understand this table.
+
+select a.name as Name
+from employee as a JOIN employee as b
+On a.managerId=b.id
+Where a.salary > b.salary
+
+182. Duplicate Emails
+
+select Email, count(Email) as num
+from Person2
+Group by Email
+having num > 1
+
+select email from person2
+group by email
+having count(email) > 1
+
+- 183. Customers Who Never Order
+-- Write an SQL query to report all customers who never order anything.
+select customers.name
+from customers
+where customers.id NOT IN (
+select customers.id
+from customers JOIN orders ON customers.id=orders.customerid)
+
+-- 184. Department Highest Salary
+-- Write an SQL query to find employees who have the highest salary in each of the departments.
+-- Return the result table in any order.
+
+In this question, we should do a new syntax:
+where (a,b) IN (c,d) where (c,d) can be replaced by a whole query
+
+select department.name AS 'department', employee.name as 'employee',employee.salary
+from employee JOIN department ON employee.departmentid=department.id
+where (employee.departmentid,employee.salary) IN
+( select employee.departmentid, max(employee.salary)
+from employee
+group by employee.departmentid ); -- through doing so, we can find the maximum salary of each department
+
+
+-- 185. Department Top Three Salaries (HARD)
+-- A company's executives are interested in seeing who earns the most money in each of the company's departments. 
+-- A high earner in a department is an employee who has a salary in the top three unique salaries for that department.
+-- Write an SQL query to find the employees who are high earners in each of the departments.
+
+In this question, it requires 'unique salary'. THis means we should apply to the Dense_Rank
+first we need to rank the salary in each department and then find the employees in each department are in top 3
+
+select a.*
+from (
+select e.name as 'Employee', d.name as 'Department',e.salary as 'Salary',
+       Dense_Rank () OVER (partition by e.departmentid order by e.salary DESC) as 'Rank'
+from employee e JOIN department d ON e.departmentid=d.id ) as a
+where a.Rank <= 3
+
+-- 196. Delete Duplicate Emails
+-- Write an SQL query to delete all the duplicate emails, keeping only one unique email with the smallest id.
+
+-- self join syntax:
+Select column_names(s)
+From table T1, table T2
+Where condition
+
+for example, if the table a is  1  a
+                                2  b
+				3. c
+first, we should know what table we will get after running 
+select *
+from table a, table b
+
+after running this, we will get 1 a 1 a
+                                2 b 1 a
+				3 c 1 a
+				1 a 2 b
+				2 b 2 b
+				3 c 2 b
+				1 a 3 c
+				2 b 3 c
+				3 c 3 c
+If there is no duplication, after running 
+select *
+from table a, table b
+where a.column2=b.column 2
+we can only get: 1 a 1 a 
+                 2 b 2 b
+		 3 c 3 c
+however, if there exists duplications, for example a=c
+we will have   1 a 1 a
+               1 a 3 a
+	       2 b 2 b
+	       3 a 1 a
+	       3 a 3 a
+Then, go back to the question, we want to save the unique smaller id, thus we can do a reserve thing, we delete the duplicated larger id
+that is 
+Delete *
+from table a, table b
+where a.column2=b.column 2 AND a.column1 > b.column 1
+
+
