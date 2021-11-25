@@ -1,0 +1,110 @@
+IMPORTANT: How to get the cumulative sum? -- > 534,571. a. wind function SUM b. Self-Join
+           How to find the median value? 569
+
+
+511 Game Play Analysis I [Easy]
+Write an SQL query that reports the first login date for each player.
+
+- know we can directly use Min(Date()),Max(Date())
+
+select player_id, Min( Date(event_date)) As first_login
+from Activity
+Group by player_id
+
+
+512 Game Play Analysis II [Easy]
+Write a SQL query that reports the device that is first logged in for each player.
+
+My way:
+select player_id, device_id
+from activity
+where (player_id,event_date) IN (
+select player_id, Min(date(event_date)) As first_login
+from activity
+group by player_id );
+
+We can also use the window functio
+
+select player_id,device_id
+from (select player_id, device_id, Rank () Over (partition by player_id Order by event_date) As firstDay
+from activity ) as a
+where firstDay = 1
+
+
+534 Game Play Analysis III [Medium]
+-- Write an SQL query that reports for each player and date, how many games played so far by the player. 
+-- That is, the total number of games played by the player until that date. Check the example for clarity.
+
+-- importance!! how to understand this question. It is asking for the cummulative time.
+
+a. To calculate the cummulative sum, Using Sum () Function with Over () Clause :
+select player_id,event_date,sum(games) Over (partition by player_id order by event_date) as game_played_so_far
+from activity
+
+b. Using sel-join
+select a.player_id, a.event_date,sum(b.games)
+from activity a join activity b
+on a.player_id = b.player_id
+where a.event_date >= b.event_date
+group by a.player_id, a.event_date
+order by a.player_id;
+
+550 Game Play Analysis IV [Medium]
+Write an SQL query that reports the fraction of players that logged in again on the day after the day they first logged in, rounded to 2 decimal places. 
+In other words, you need to count the number of players that logged in for at least two consecutive days starting from their first login date, 
+then divide that number by the total number of players.
+
+a. -- aggreate function and group 
+  -- similar to my idea, we first find the first login date of each player and then check whether they log in on the following day
+SELECT ROUND(COUNT(DISTINCT b.player_id)/COUNT(DISTINCT a.player_id), 2) AS fraction 
+FROM Activity AS a LEFT JOIN (SELECT player_id, MIN(event_date) AS first_login FROM Activity GROUP BY player_id) AS b
+ON a.player_id = b.player_id
+AND DATEDIFF(a.event_date, b.first_login) = 1 ## can also use DATE_ADD(b.first_login,INTERVAL 1 DAY) = a.event_date
+
+b. -- FIRST_VALUE() Window Function. (not use MIN but the FIRST_VALUE window function).  ## First_Value(column name) OVER (partition by order by)
+SELECT ROUND(COUNT(DISTINCT b.player_id)/COUNT(DISTINCT a.player_id), 2) AS fraction FROM Activity AS a
+LEFT JOIN
+(SELECT player_id, FIRST_VALUE(event_date) OVER(PARTITION BY player_id ORDER BY event_date) AS first_login FROM Activity) AS b
+ON a.player_id = b.player_id
+AND DATEDIFF(a.event_date, b.first_login) = 1. 
+
+569 Median Employee Salary [Hard]
+!!! how to find the median
+-- when there is n of values in total, the median should be 
+-- n is odd, median = (n+1)/2 th observation
+-- n is even median = 1/2 (n/2 th observation + (n/2 + 1)th obervation)
+
+-- so if when we have the rank
+-- we should find the rank of the median
+-- if intotal there are n values, the median should be Where n/2 <= THIS <= n/2 + 1;
+-- OR  -- where rno in (ceil(cnt/2), cnt/2 + 1);
+
+select id, company, salary
+from
+(
+  select id, company, salary, 
+         row_number() over(partition by company order by salary) as rno, -- the rank of each salary in each company
+         count(*) over(partition by company) as cnt -- how many staff in each company
+  from Employee
+) x
+WHERE (cnt/2) <= rno AND rno<= (cnt/2) + 1;  -- where rno in (ceil(cnt/2), cnt/2 + 1)
+
+
+-- 570. Managers with at Least 5 Direct Reports
+
+select name
+from employee
+where id IN
+(select managerid from employee 
+group by managerid
+Having count(managerID) >= 5 )
+
+-- 571 Find Median Given Frequency of Numbers [Hard]
+  -- QUESTION: How to get the cummulative sum?
+
+SELECT  AVG(Number) AS median
+From
+(select *, SUM(Frequency) OVER (ORDER BY Number) AS cum_sum, 
+          (sum(frequency) Over () / 2) As mid
+FROM Numbers ) as T
+Where mid BETWEEN cum_sum - frequency AND cum_sum;
