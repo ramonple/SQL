@@ -107,4 +107,8 @@ From
 (select *, SUM(Frequency) OVER (ORDER BY Number) AS cum_sum, 
           (sum(frequency) Over () / 2) As mid
 FROM Numbers ) as T
+
 Where mid BETWEEN cum_sum - frequency AND cum_sum;
+-- cum_sum caculate the number is from which position
+-- 5<= mid <= 9, the corresponding number starts from 5th and ends at 9th
+-- Use Average to deal with the condition when the number of numbers is event. the median should be 1/2 (x1+x2)
