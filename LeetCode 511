@@ -1,4 +1,6 @@
 IMPORTANT: How to get the cumulative sum? -- > 534,571. a. wind function SUM b. Self-Join
+                                              a. SUM (column name) OVER (partition by. order by)
+                                              b. select xxx from table t1, table t2 ON t1.id=t2.id AND t1.id>=t2.id
            How to find the median value? 569
 
 
