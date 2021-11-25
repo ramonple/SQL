@@ -1,7 +1,7 @@
 IMPORTANT: How to get the cumulative sum? -- > 534,571. a. wind function SUM b. Self-Join
                                               a. SUM (column name) OVER (partition by. order by)
                                               b. select xxx from table t1, table t2 ON t1.id=t2.id AND t1.id>=t2.id
-           How to find the median value? 569
+           How to find the median value? 569, 571 (please refer to the end)
 
 
 511 Game Play Analysis I [Easy]
@@ -114,3 +114,30 @@ Where mid BETWEEN cum_sum - frequency AND cum_sum;
 -- cum_sum caculate the number is from which position
 -- 5<= mid <= 9, the corresponding number starts from 5th and ends at 9th
 -- Use Average to deal with the condition when the number of numbers is event. the median should be 1/2 (x1+x2)
+
+
+---------------------------How to get the median in SQL-----------------------------------
+
+a. ( Max of Bottom Half + Min of Top Half ) / 2
+
+SELECT
+(
+ (SELECT MAX(Score) FROM
+   (SELECT TOP 50 PERCENT Score FROM Posts ORDER BY Score) AS BottomHalf)
+ +
+ (SELECT MIN(Score) FROM
+   (SELECT TOP 50 PERCENT Score FROM Posts ORDER BY Score DESC) AS TopHalf)
+) / 2 AS Median
+
+-- asscending order: upper 50%. -> The maximum of the Bottom Half
+-- descending order: upper 50%. -> The minimum of the Top Half
+
+b. RANK 
+Rank the corresponding the values in the column as 'RANK'
+calculate how many numbers are there in total as 'Total'
+We want     Total/ 2 <= RANK <= Total/2 + 1. OR RANK IN (ceil(Total/2), Total/2 + 1)
+
+------- Use Frequency to find the median
+a. calculate the cummulative frequency As 'cum_fre'
+b. find the mid postion -> Sum(frequency) / 2 AS 'mid'
+Where mid BETWEEN cum_fre - fre AND cum_fre
