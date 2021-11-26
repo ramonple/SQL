@@ -262,10 +262,105 @@ ORDER BY id ASC, month DESC;
 
 580 Count Student Number in Departments [Medium]
 
+-- Write a query to print the respective department name and number of students majoring in each department 
+-- for all departments in the department table (even ones with no current students).
+
+select a.dept_name, count(b.student_id) as student_number
+from department as a LEFT JOIN student as b
+on a.dept_id=b.dept_id
+group by a.dept_name
+order by student_number DESC,
+a.dept_name;
 
 
 
 
+-- 584 Find Customer Referee
+select id,name
+from customer
+where referee_id <> 2 OR referee_id IS NULL
+
+This question is easy. But we should notice the where condition. if we only set referee_id <> 2, the null will be ignored.
+Thus we should add one more condition  ' OR ' 'referre IS NULL'
+
+-- 585 Investments in 2016 [Medium]
+
+-- Write a query to print the sum of all total investment values in 2016 (TIV_2016), 
+-- to a scale of 2 decimal places, for all policy holders who meet the following criteria:
+
+-- Have the same TIV_2015 value as one or more other policyholders.
+-- Are not located in the same city as any other policyholder (i.e.: the (latitude, longitude) attribute pairs must be unique).
 
 
+select  ROUND(sum(TIV_2016),2 ) as TIV_2016
+from insurance
+where insurance.TIV_2015 IN
+(select TIV_2015 FROM insurance
+GROUP by TIV_2015
+Having Count(TIV_2015) > 1 )
+AND  CONCAT (LAT,",",LON) IN
+(select concat (LAT,",",LON) FROM insurance
+group by LAT,LON
+HAVING COUNT(*) = 1 );
+
+-- we can split the questions into two conditions (just refer to the question part).
+-- first find out unquie TIV_2015 investment.
+
+select TIV_2015,count(*)
+from insurance
+group by TIV_2015
+HAVING count(*)>1 -- we know it is 10.00 which appears 3 times
+
+Then, we have to find unique location of each customer. Here the location should be LAN + LON.
+Know how to use CONCAT !!!
+However if we have lan=10,lon13, Contact(lan,lon)=1013. = lon=101,lon=3, thus we use CONCAT(LAN,",",LON) here
+
+select concat(lat,",",lon)
+from insurance
+group by lat,lon
+Having count(*) = 1
+
+-- 586 Customer Placing the Largest Number of Orders [Easy]
+
+-- 595 Big Countries [Easy]
+-- A country is big if it has an area of bigger than 3 million square km or a population of more than 25 million.
+-- Write a SQL solution to output big countries' name, population and area.
+
+select population,area
+from world
+where population > 2500000 OR area>3000000
+
+-- we can also use UNION to do this
+
+select name,population,are
+from world
+where area > 3000000
+UNION
+select name,population,area
+from world
+where population > 2500000
+
+
+
+
+-- 596 Classes More Than 5 Students [Easy]
+-- Please list out all classes which have more than or equal to 5 students.
+-- Note: The students should not be counted duplicate in each course
+
+select class
+from courses
+group by class
+having count(DISTINCT student) >= 5
+
+-- NOTICE: how to deal with the DISTINCT
+
+-- SUBQUERY METHOD:
+select class FROM
+(
+select class,count(distinct student) as num
+from courses
+group by class ) as temp_table
+from temp_table.num>= 5
+
+-- 597 Friend Requests I: Overall Acceptance Rate [Easy]
 
