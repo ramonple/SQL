@@ -141,3 +141,131 @@ We want     Total/ 2 <= RANK <= Total/2 + 1. OR RANK IN (ceil(Total/2), Total/2 
 a. calculate the cummulative frequency As 'cum_fre'
 b. find the mid postion -> Sum(frequency) / 2 AS 'mid'
 Where mid BETWEEN cum_fre - fre AND cum_fre
+
+----------------------------------------------------------------------------------
+
+574 Winning Candidate [Medium]
+
+-- problem is how to read the vote table. id is the one who votes, and candidate id is the one who gets the vote.
+-- for example, id=1 votes to candidate 2.
+
+-- approach 1
+Select Name
+From Candidate JOIN
+(select CandidateId, COUNT(*)
+From VOTE
+group by CandidateID
+Order by COUNT(*) DESC
+LIMIT 1 ) As A
+ON Candidate.id=A.candidateid
+
+-- approach 2
+select Name
+From Candidate
+WHere id =
+(select CandidateId
+From VOTE
+group by CandidateID
+Order by COUNT(*) DESC
+LIMIT 1 )
+
+
+-- 577 Employee Bonus [Easy]
+-- Select all employee's name and bonus whose bonus is < 1000.
+select employee.name,bonus.bonus
+from Employee LEFT JOIN bonus ON employee.empid=bonus.empId
+where employee.empid NOT IN (
+select empid from Bonus
+where bonus >= 1000);
+
+-- Not sure what I am doing here is correct or not. OR I need to let SQL to output null if there doesn't exist the value.
+a. 
+select employee.name, IFNULL(bonus.bonus, null) As Bonus
+from Employee LEFT JOIN bonus ON employee.empid=bonus.empId
+where employee.empid NOT IN (
+select empid from Bonus
+where bonus >= 1000);
+
+b. 
+SELECT a.name, 
+b.bonus
+FROM Employee AS a
+LEFT JOIN Bonus AS b
+ON a.empId = b.empId
+WHERE b.bonus < 1000 OR b.bonus IS NULL; -- different idea. Here it want to find the id whether with bonous < 1000 Or NULL
+
+
+-- 578 Get Highest Answer Rate Question [Medium]
+Write a sql query to identify the question which has the highest answer rate.
+Note:The highest answer rate meaning is: answer number's ratio in show number in the same question.
+
+-- approach 1
+SELECT question_id AS 'survey_log' -- Leetcode asks for the column name 'survey_log'
+FROM survey_log
+GROUP BY question_id
+ORDER BY COUNT(answer_id)/ COUNT(IF(action = 'show', 1, NULL)) DESC.  -- clever approach to calculate how many times this question has been answered
+LIMIT 1;
+OR 
+select question_id as 'survery_log'
+from survey_log
+group by question_id
+Order by COUNT(answer_id) / SUM(CASE WHEN action = 'show' THEN 1 ELSE 0 END) DESC
+LIMIT 1
+
+-- approach 2
+SELECT question_id AS survey_log
+FROM
+(SELECT question_id,
+        SUM(case when action="answer" THEN 1 ELSE 0 END) AS num_answer,
+        SUM(case when action="show" THEN 1 ELSE 0 END) AS num_show  
+	FROM survey_log
+	GROUP BY question_id
+) AS tbl
+ORDER BY (num_answer / num_show) DESC
+LIMIT 1
+
+-- TAKE AWAY: two approaches to find the percentage; Use LIMIT 1 to find the MIN or MAX (with desc)
+
+
+
+579 Find Cumulative Salary of an Employee [Hard]
+
+-- Write a SQL to get the cumulative sum of an employee's salary over a period of 3 months but exclude the most recent month.
+-- The result should be displayed by 'Id' ascending, and then by 'Month' descending.
+
+SELECT E1.id, E1.month,
+(IFNULL(E1.salary, 0) + IFNULL(E2.salary, 0) + IFNULL(E3.salary, 0)) AS Salary
+FROM
+(
+SELECT id, MAX(month) AS month FROM Employee
+GROUP BY id
+HAVING COUNT(*) > 1
+) AS maxmonth
+LEFT JOIN Employee AS E1 
+ON (maxmonth.id = E1.id AND maxmonth.month > E1.month). -- E1 includes everthing expect the latest month (what we want to delete)
+LEFT JOIN Employee AS E2 
+ON (E2.id = E1.id AND E2.month = E1.month - 1)
+LEFT JOIN Employee AS E3 
+ON (E3.id = E1.id AND E3.month = E1.month - 2)
+ORDER BY id ASC, month DESC;
+
+-- why we should use left join?
+-- first, we find the payment of latest month of each employee. For example, this month is April, and we have 3 employees,
+--  they are a,b,and c. For a, the lastest is 4 (april), for B is 3 (march) and 2 (Feb) for c.
+--  If this is the case, for a we should ignore the payment made in april. However, we cannot do this for b and c. As they
+-- do not get payment on the lasest month. Thus, we should keep all of them => That is why we should use LEFT JOIN
+
+- Classical approach to calculate the cummulative sth is the SELF JOIN (which is shown as LEFT JOIN here)
+- we only need to consider the magnitude relationship, e.g., a.id = b.id AND a.month=b.month+1
+
+
+
+580 Count Student Number in Departments [Medium]
+
+
+
+
+
+
+
+
