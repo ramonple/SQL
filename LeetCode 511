@@ -2,6 +2,8 @@ IMPORTANT: How to get the cumulative sum? -- > 534,571. a. wind function SUM b. 
                                               a. SUM (column name) OVER (partition by. order by)
                                               b. select xxx from table t1, table t2 ON t1.id=t2.id AND t1.id>=t2.id
            How to find the median value? 569, 571 (please refer to the end)
+	   
+	   602: How to deal with the double-directed problem -> UNION : same # of columns, same column name
 
 
 511 Game Play Analysis I [Easy]
@@ -363,4 +365,72 @@ group by class ) as temp_table
 from temp_table.num>= 5
 
 -- 597 Friend Requests I: Overall Acceptance Rate [Easy]
+
+-- Write a query to find the overall acceptance rate of requests rounded to 2 decimals, 
+-- which is the number of acceptance divides the number of requests.
+
+-- Note:
+
+-- The accepted requests are not necessarily from the table friend_request. In this case, you just need to simply count the total accepted requests 
+-- (no matter whether they are in the original requests), and divide it by the number of requests to get the acceptance rate.
+-- It is possible that a sender sends multiple requests to the same receiver, and a request could be accepted more than once. 
+-- In this case, the ‘duplicated’ requests or acceptances are only counted once.
+-- If there is no requests at all, you should return 0.00 as the accept_rate.
+
+SQL WITH caluse: The SQL WITH clause allows you to give a sub-query block a name (a process also called sub-query refactoring), which can be referenced in several places within the main SQL query. 
+
+WITH 
+tr AS (
+	-- total unique sent requests
+    SELECT COUNT(sender_id) AS tot_req FROM(
+    SELECT sender_id
+    FROM friend_request
+    GROUP BY sender_id, send_to_id) AS t1 
+),
+
+ta AS (
+	-- total unique accepted requests
+    SELECT COUNT(request_id) AS tot_act FROM  (
+    SELECT request_id
+    FROM request_accepted
+    GROUP BY request_id, accept_id) AS t2
+)
+
+SELECT ROUND(IFNULL(ta.tot_act / tr.tot_req,0),2) AS accept_rate
+FROM tr, ta;
+
+-- should be familiar with WITH caluse. 
+-- With A as (), B as(). select A.xxx, B.xxx from A,B. --> directly from A,B. NO JOIN!!!
+
+
+
+-- 602 Friend Requests II: Who Has the Most Friends [Medium] !!!
+
+-- Write a query to find the the people who has most friends and the most friends number under the following rules:
+
+-- It is guaranteed there is only 1 people having the most friends.
+-- The friend request could only been accepted once, which mean there is no multiple records with the same requester_id and accepter_id value.
+
+-- NOTICE: this should be a double direction!!! one can be the requester and accepter at the same time.
+
+SELECT c.people as id, SUM(c.cnt) AS num
+FROM (
+SELECT requester_id AS people, COUNT(DISTINCT accepter_id) AS cnt
+FROM request_accepted
+GROUP BY requester_id
+
+UNION ALL    --   UNION removes duplicate records (where all columns in the results are the same), UNION ALL does not.
+
+SELECT accepter_id AS people, COUNT(DISTINCT requester_id) AS cnt
+FROM request_accepted
+GROUP BY accepter_id 
+) AS c    -- using UNION we directly combine two tables. THUS they should have the same number of columns with same names
+
+GROUP BY c.people
+ORDER BY SUM(c.cnt) DESC
+LIMIT 1;
+
+
+Differences between UNION and UNION ALL with figures : https://dataschool.com/learn-sql/what-is-the-difference-between-union-and-union-all/
+
 
