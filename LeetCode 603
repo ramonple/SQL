@@ -1,0 +1,258 @@
+-- 612 calculate the distances between points in a 2-D space (in one single table).  -- POWER( base, exponent )
+-- 613 the distance between two points in one line
+-- 615 : -- NOTICE: if we want to find the avg of a particular group, just need to group by it
+-- 619 Pivot table
+
+-- WITH 
+
+WITH <alias_name> AS (select.  from. )
+SELECT column_list FROM <alias_name>[,table_name]
+[WHERE <join_condition>]
+
+
+
+
+
+-- 603 Consecutive Available Seats [Easy]
+-- Can you help to query all the consecutive available seats order by the seat_id using the following cinema table?
+
+-- Note:
+
+-- The seat_id is an auto increment int, and free is bool ('1' means free, and '0' means occupied.).
+-- Consecutive available seats are more than 2(inclusive) seats consecutively available.
+
+
+-- my approach: (referring to the approach applied in Q601)
+
+WITH
+AP as (
+select a.seat_id as A, b.seat_id as B
+from cinema a LEFT JOIN cinema b ON a.seat_id=b.seat_id -1
+where a.free = 1 and b.free =1 ),
+
+SP as (
+select A as seat from AP. -- at first attempt, I make a mistake here. We should notice FROM should be the table defiend before
+UNION 
+select B as seat from AP
+)
+
+select seat_id
+from cinema
+where seat_id IN (select seat from SP);
+
+-- through this approach, the column satisfied are shown in differnt columns, so we should use the UNION
+
+-- Leetcode answer
+SELECT DISTINCT a.seat_id
+FROM cinema AS a JOIN cinema AS b
+ON ABS(a.seat_id - b.seat_id) = 1. -- first time see this, as in this question, there is no date, no particular sequence 
+                                  -- through abs(xx-xx) = 1 we can make sure these two seats are con
+AND a.free = 1 AND b.free = 1
+ORDER BY a.seat_id;
+-- through this approach, we dont need to do the UNION step
+
+-- it seems this can also be used for two consecutive thing. I applied it to Q601, where with 3 consecutive date, it does not work.
+
+
+-- 607 Sales Person [Easy]
+-- Output all the names in the table salesperson, who didn’t have sales to company 'RED'.
+select s.name,s.sales_id
+from salesperson s
+where s.sales_id not in 
+    (select o.sales_id
+    from orders o
+    left join company c on o.com_id = c.com_id
+    where c.name = 'RED')
+
+
+-- 608 Tree Node [Medium]
+-- Each node in the tree can be one of three types:
+
+-- Leaf: if the node is a leaf node.
+-- Root: if the node is the root of the tree.
+-- Inner: If the node is neither a leaf node nor a root node.
+
+-- Write a query to print the node id and the type of the node. Sort your output by the node id. The result for the above sample is:
+
+select id, 
+CASE WHEN p_id IS NULL THEN 'Root'
+      WHEN id NOT IN (select DISTINCT p_id from tree where p_id is NOT NULL) THEN 'leaf'
+			ELSE 'Inner' 
+   END AS Type
+from tree
+-- it seems like we can have only one 'ELSE' in When clause
+
+-- for example:
+SELECT player_name,
+       weight,
+       CASE WHEN weight > 250 THEN 'over 250'
+            WHEN weight > 200 THEN '201-250'
+            WHEN weight > 175 THEN '176-200'
+            ELSE '175 or under' END AS weight_group
+  FROM benn.college_football_players
+  
+-- OR 
+select id,
+(Case when p_id is NULL then 'Root'
+      when id IN  (select p_id from tree where p_id IS NOT NULL) THEN 'INNER'
+			ELSE 'LEAF' END ) as TYPE
+from tree
+
+
+
+-- 610 Triangle Judgement [Easy]
+
+-- A pupil Tim gets homework to identify whether three line segments could possibly form a triangle.
+
+-- However, this assignment is very heavy because there are hundreds of records to calculate.
+
+select x,y,z,
+( Case when x+y> z and x+z>y AND y+z > x then 'Yes' ELSE 'No' END )AS triangle
+from triangle
+
+-- Another approach
+select *, 
+    IF(x + y > z AND x + z > y AND y + z > x, 'Yes', 'No') as triangle 
+    FROM triangle;
+-- SELECT IF(500<1000, "YES", "NO");
+
+-- 612 Shortest Distance in a Plane [Medium]
+-- Table point_2d holds the coordinates (x,y) of some unique points (more than two) in a plane.
+
+-- find out the shortest distance between two points
+
+-- !! I have no idea two to deal with this!!
+-- for the relationship inside a table should use the 'self join'
+
+select  DISTINCT ( POWER(a.x-b.x,2) + POWER(a.y-b.y,2)) as shortest
+from point_2d as a
+JOIN point_2d as b
+ON a.x<>b.x OR a.y<>b.y.  -- focus on this condition
+order by shortest
+LIMIT 1
+-- POWER( base, exponent )
+
+SELECT
+ROUND(MIN(SQRT(POW(a.x - b.x, 2) + POW(a.y - b.y, 2))),2) AS shortest
+FROM point_2d AS a
+JOIN point_2d AS b
+ON a.x <> b.x OR a.y <> b.y;  -- -- focus on this condition
+
+
+-- 613 Shortest Distance in a Line [Easy]
+-- Write a query to find the shortest distance between two points in these points.
+-- The shortest distance is '1' obviously, which is from point '-1' to '0'. So the output is as below:
+
+select MIN( POWER(a.x-b.x,2)) As 'shortest'
+from point a JOIN point b ON a.x<>b.x
+
+-- WRONG!!!! these two are on a line. The distance should be |x1-x2|!!
+select min(abs(a.x-b.x)) As 'shortest'
+from point a JOIN point b ON a.x<>b.x
+
+-- 614 Second Degree Follower [Medium]
+-- In facebook, there is a follow table with two columns: followee, follower.
+-- Please write a SQL query to get the amount of each follower’s follower if he/she has one.
+
+
+select a.follower AS follower,count(distinct b.follower) as num
+FROM follow AS a LEFT JOIN follow AS b 
+ON a.follower = b.followee
+where b.follower is not null
+group by a.follower
+
+-- better understand this qustions. the Follower of the Follower -- > self join needed!
+
+
+-- 615 Average Salary: Departments VS Company [Hard]
+
+-- NOTICE: for date_format('2017-03-03','%Y-%M') (capital M) 2017-March
+               date_format('2017-03-03','%Y-%m') (capital M) 2017-03
+-- NOTICE: want to find the avg of a particular group, just need to group by it    
+
+select  department_salary.pay_month, department_id,
+( CASE WHEN department_salary.dep_avg > company_salary. com_avg Then 'Higher'
+     WHEN department_salary.dep_avg < company_salary. com_avg Then 'Lower'
+		 ELSE 'Same' END ) as comparison
+from 
+(	select avg(amount) as com_avg, date_format(pay_date,'%Y-%m') as pay_month
+	from salary
+	group by date_format(pay_date,'%Y-%m')  ) as company_salary
+	JOIN 
+( select department_id, avg(amount) as dep_avg, date_format(pay_date,'%Y-%m') as pay_month
+	from salary JOIN employee ON salary.employee_id = employee.employee_id
+	group by department_id,date_format(pay_date,'%Y-%m') ) as  department_salary
+ON company_salary.pay_month =  department_salary.pay_month
+
+	-- average salary company
+	select avg(amount) as com_avg, date_format(pay_date,'%Y-%m') as pay_month
+	from salary
+	group by date_format(pay_date,'%Y-%m') 
+	
+	-- average department
+	select department_id, avg(amount) as dep_avg, date_format(pay_date,'%Y-%m') as pay_month
+	from salary JOIN employee ON salary.employee_id = employee.employee_id
+	group by department_id,date_format(pay_date,'%Y-%m')
+  
+  
+  
+  
+ -- 618 Students Report By Geography [Hard]
+ -- A U.S graduate school has students from Asia, Europe and America. The students' location information are stored in table student as below.
+ 
+-- Pivot the continent column in this table so that each name is sorted alphabetically 
+-- and displayed underneath its corresponding continent. 
+-- The output headers should be America, Asia and Europe respectively. 
+-- It is guaranteed that the student number from America is no less than either Asia or Europe.
+
+ -- How to pivot table???????????????
+ -- use ROW_NUMBER() OVER (partition by   order by)
+ 
+ SELECT
+    MAX(CASE WHEN continent = 'America' THEN name END) AS America,  -- because this row will be 1. contains the one in America or 2. null
+    MAX(CASE WHEN continent = 'Asia' THEN name END) AS Asia,
+    MAX(CASE WHEN continent = 'Europe' THEN name END) AS Europe
+FROM (
+    SELECT 
+        continent,
+        name,
+        ROW_NUMBER() OVER(PARTITION BY continent ORDER BY name) as rn
+    FROM student
+) x
+GROUP BY rn.  -- important. without group by for the rn within each continent, we will only have one 
+
+
+First we should focus on the from table, where we should add a rank column with ROW_NUMBER. MUST partition by the classified basement
+-- for the from table: 
+continent.name  rn
+-------------------
+America	  Jack	1
+America	  Jane	2
+Asia	    Xi	  1
+Europe	 Europe	1
+-------------------
+
+Then, in the selection section, we should use MAX for each classification
+
+ 
+ 
+619 Biggest Single Number [Easy]
+select x.num
+from
+(
+select num, count(num) as cnt
+from my_number
+group by num
+order by num DESC) as x
+where x.cnt = 1
+limit 1
+
+-- leetcode
+SELECT MAX(num) AS num FROM
+(
+SELECT num FROM my_numbers
+GROUP BY num
+HAVING COUNT(*) = 1
+) AS x;
+
+
