@@ -4,7 +4,7 @@ IMPORTANT: How to get the cumulative sum? -- > 534,571. a. wind function SUM b. 
            How to find the median value? 569, 571 (please refer to the end)
 	   
 	   602: How to deal with the double-directed problem -> UNION : same # of columns, same column name
-
+           601 : another approach of dealing with continuous date that satisfies some conditions
 
 511 Game Play Analysis I [Easy]
 Write an SQL query that reports the first login date for each player.
@@ -432,5 +432,109 @@ LIMIT 1;
 
 
 Differences between UNION and UNION ALL with figures : https://dataschool.com/learn-sql/what-is-the-difference-between-union-and-union-all/
+
+
+
+
+-- 601 Human Traffic of Stadium [Hard]
+-- Please write a query to display the records which have 3 or more consecutive rows and the amount of people more than 100(inclusive).
+-- Note: Each day only have one row record, and the dates are increasing with id increasing.
+
+-- leetcode answer:
+WITH 
+tmp AS (
+SELECT a.vist_date AS date1, b.vist_date AS date2, c.vist_date AS date3
+FROM stadium AS a  LEFT JOIN stadium AS b ON b.id = a.id + 1      -- it should be left join, because the earlist table will have more information
+                   LEFT JOIN stadium AS c ON c.id = a.id + 2
+WHERE a.people >= 100 AND b.people >= 100  AND c.people >= 100),
+
+temp1 AS (
+select date1 AS total_date FROM tmp
+UNION 
+select date2 AS total_date from tmp
+UNION 
+select date3 AS total_date from tmp
+)  -- UNION will delete the duplicated information
+
+select * From Stadium
+where vist_date IN (select * from temp1);
+
+
+-- take away:
+the main difference between this question and previous ones are the id and event_date. Here, id can also represent the date. 
+In previuos conditions, we should do: DATE_ADD(a.event_date,INTERVAL 1 DAY) = b.event_date.
+
+In this question, as we want to check for contiuous three days. We should find three columns. One ends day 0 (today), the other ends yesterday (day -1), and the other ends the day before yesterday (day -2).
+THUS we have:
+
+select a.vist_date as day1, b.vist_date as day2 ,c.vist_date as day3
+from stadium a LEFT JOIN stadium b ON a.id=b.id-1
+               LEFT JOIN stadium c ON a.id=c.id-2
+-- the output:
+DAY 1            DAY 2          DAY 3
+2017-01-01	2017-01-02	2017-01-03
+2017-01-02	2017-01-03	2017-01-04
+2017-01-03	2017-01-04	2017-01-05
+2017-01-04	2017-01-05	2017-01-06
+2017-01-05	2017-01-06	2017-01-07
+2017-01-06	2017-01-07	2017-01-08
+2017-01-07	2017-01-08	
+2017-01-08		
+
+We should add the condition: the people >= 100
+
+select a.vist_date as day1, b.vist_date as day2 ,c.vist_date as day3
+from stadium a LEFT JOIN stadium b ON a.id=b.id-1. -- a is one day earlier than b
+               LEFT JOIN stadium c ON a.id=c.id-2. -- a is two days earlier than c
+Where a.people >= 100 AND b.people >= 100 AND	c.people >= 100       
+
+-- out put:
+DAY 1           DAY 2           DAY 3
+2017-01-05	2017-01-06	2017-01-07
+2017-01-06	2017-01-07	2017-01-08
+
+KNOW we want to combine these three columns into one column and delete the duplicated rows, thus we should use UNION
+we call the table we get above as 'tmp'
+
+WITH 
+tmp as 
+
+( select a.vist_date as day1, b.vist_date as day2 ,c.vist_date as day3
+from stadium a LEFT JOIN stadium b ON a.id=b.id-1
+               LEFT JOIN stadium c ON a.id=c.id-2
+Where a.people >= 100 AND b.people >= 100 AND	c.people >= 100) 
+,
+temp1 AS
+( select date1 AS total_date FROM tmp
+    UNION 
+select date2 AS total_date from tmp
+   UNION 
+select date3 AS total_date from tmp
+)                                       -- UNION will delete the duplicated information
+
+Thus we will have (not output by SQL, I write it by myself):
+
+total_date (if UNION ALL)
+2017-01-05	
+2017-01-06	
+2017-01-06	
+2017-01-07
+2017-01-07
+2017-01-08
+
+
+total_date (if UNION)
+2017-01-05	
+2017-01-06		
+2017-01-07
+2017-01-08       -- we know on these continuous four days, we have people >= 100
+
+we want to get the date which belongs to the date shown in temp1
+
+select *
+from stadium
+where evnet_date IN (select total_date from temp1)
+
+As we have the code shown above
 
 
