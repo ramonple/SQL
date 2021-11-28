@@ -1,7 +1,32 @@
+
+Try to understand 'WIHT' caluse. It is used to replace the regular sub-query.
+
+WITH <alias_name> AS (sql_subquery_statement)
+SELECT column_list FROM <alias_name>[,table_name]
+[WHERE <join_condition>]
+
+WITH <alias_name_A> AS (sql_subquery_statement),
+<alias_name_B> AS(sql_subquery_statement_from_alias_name_A
+or sql_subquery_statement )
+SELECT <column_list>
+FROM <alias_name_A>, <alias_name_B> [,table_names]
+[WHERE <join_condition>]
+
+
+
+
 -- 612 calculate the distances between points in a 2-D space (in one single table).  -- POWER( base, exponent )
 -- 613 the distance between two points in one line
 -- 615 : -- NOTICE: if we want to find the avg of a particular group, just need to group by it
 -- 619 Pivot table
+-- 620 find the event and odd numbers
+-- 626 change id according to even and odd. FROM table
+-- 627 UPDATE!!! with case when caluse
+
+-- 1045 If want to calculate the number of unique features in a table: 
+			    select count(distinct product_key)
+			    from product
+
 
 -- WITH 
 
@@ -254,5 +279,229 @@ SELECT num FROM my_numbers
 GROUP BY num
 HAVING COUNT(*) = 1
 ) AS x;
+
+
+
+
+620 Not Boring Movies [Easy]
+-- how to determine decimals when creating tables:
+create table cinema 
+(id int, movie varchar(15), description varchar(30), rating decimal(10,2), -- not integer, should be decimal
+primary key (id) );
+
+-- approach 1: text NOT LIKE '%xxx%' & (x % 2) <> 0 -- calculate the remainder of x/2. if event, then 0. if 1, then odd.
+select *
+from cinema 
+where description NOT LIKE '%boring%' 
+      AND
+			(ID % 2) <> 0
+order by rating DESC
+
+-- approach 2: MOD(x,y) return the remainder of x/y, 1 for odd, 0 for even & text <>'xxxx'
+SELECT * FROM cinema
+WHERE MOD(id, 2) = 1 AND description <> 'boring'
+ORDER BY rating DESC;
+
+
+
+-- 626 Exchange Seats [Medium] !!!!
+
+-- Mary is a teacher in a middle school and she has a table seat storing students' names and their corresponding seat ids.
+
+-- Mary wants to change seats for the adjacent students.
+-- Can you write a SQL query to output the result for Mary?
+-- Note: If the number of students is odd, there is no need to change the last one's seat.
+
+select
+(CASE when (select max(id) from seat)%2 = 1 and id = (select max(id) from seat) then id
+when id%2 = 1 then id+1
+else id -1
+end) as id,student
+from seat
+order by id
+
+
+-- must be familar with x%2 AND (select xx from yy)%2
+
+
+select 
+(CASE when MOD(id, 2) != 0 and id = (select max(id) from seat) then id
+      when MOD(id, 2) != 0 and id <> (select max(id) from seat) then id+1
+else id -1
+end) as id,student
+from seat
+order by id
+
+
+
+
+
+-- 627. Swap Salary [Easy]
+
+-- Given a table salary, such as the one below, that has m=male and f=female values.
+-- Swap all f and m values (i.e., change all f values to m and vice versa) with a single update statement and no intermediate temp table.
+-- Note that you must write a single update statement, DO NOT write any select statement for this problem
+
+Update salary
+set sex = (CASE when sex = 'm' then 'f' else 'm' end)
+
+
+
+
+-- 1045 Customers Who Bought All Products [Medium]
+-- Write an SQL query for a report that provides the customer ids from the Customer table that bought all the products in the Product table.
+
+-- my code:
+select customer_id
+from customer
+group by customer_id
+Having count(*) =
+(
+select sum(num)
+from
+(select count(product_key) as num
+from product
+group by product_key) as a)
+                        -- to complicated. If want to calculate the number of unique features in a table: 
+			    select count(distinct product_key)
+			    from product
+			    
+-- update my code to
+select customer_id
+from customer
+group by customer_id
+Having count(*) = (select count(distinct product_key)
+                   from product )
+		   
+-- leetcode:
+SELECT b.customer_id FROM Product AS a
+LEFT JOIN Customer AS b
+ON a.product_key = b.product_key
+GROUP BY b.customer_id
+HAVING COUNT(DISTINCT b.product_key) = (SELECT COUNT(*) FROM Product);
+
+
+
+
+
+
+1050 Actors and Directors Who Cooperated At Least Three Times [Easy]
+
+-- Write a SQL query for a report that provides the pairs (actor_id, director_id) where the actor have cooperated with the director at least 3 times.
+
+SELECT actor_id, director_id FROM ActorDirector
+GROUP BY actor_id, director_id
+HAVING COUNT(timestamp) >= 3;
+
+
+
+
+-- 1068 Product Sales Analysis I [Easy] 1069 Product Sales Analysis II [Easy] 1070 Product Sales Analysis III [Medium]
+
+ -- 1068 Write an SQL query that reports all product names of the products in the Sales table along with their selling year and price.
+ 
+ select product_name, year,price
+ from sales JOIN product ON sales.product_id = product.product_id
+ 
+ SELECT b.product_name, a.year,  a.price
+FROM Sales AS a
+LEFT JOIN Product AS b
+ON a.product_id = b.product_id;
+
+-- 1069 Product Sales Analysis II [Easy]
+-- Write an SQL query that reports the total quantity sold for every product id.
+select product_name,sum(quantity)
+from sales RIGHT JOIN product ON sales.product_id = product.product_id
+group by product_name
+- output:
+100	22
+200	15
+300	null        -- not sure whether needs to show the NULL
+
+-- SELECT product_id, SUM(quantity) AS total_quantity
+FROM Sales
+GROUP BY product_id;
+- output:
+100	22
+200	15
+
+-- 1070 Product Sales Analysis III [Medium]
+-- Write an SQL query that selects the product id, year, quantity, and price for the first year of every product sold.
+
+-- my answer:
+select product_id, year as first_year, quantity, price
+from sales
+where (product_id, year) IN 
+( select product_id, min(year) as year
+from sales
+group by product_id)
+
+-- from discussion:
+
+SELECT s.product_id, s.year AS first_year, s.quantity, s.price 
+FROM (
+SELECT *, DENSE_RANK() OVER (PARTITION BY product_id ORDER BY year ASC) AS rnk FROM sales
+) AS s 
+WHERE rnk=1;
+
+
+
+-- 1075 Project Employees I [Easy]   1076 Project Employees II [Easy]  1077 Project Employees III [Medium]
+
+-- 1075 Project Employees I [Easy]  
+-- Write an SQL query that reports the average experience years of all the employees for each project, rounded to 2 digits.
+
+select p.project_id, avg(e.experience_years) as average_years
+from employee as e JOIN project as p ON e.employee_id = p.employee_id
+group by p.project_id
+
+
+--  1076 Project Employees II [Easy]
+-- Write an SQL query that reports all the projects that have the most employees.
+
+-- my answer:
+select p.project_id
+from employee as e JOIN project as p ON e.employee_id = p.employee_id
+group by p.project_id
+order by sum(e.employee_id) DESC
+Limit 1
+
+-- from discussion
+select a.project_id
+from (
+select project_id, RANK () Over(order by COUNT(employee_id) DESC) as r
+from project  
+group by project_id
+) as a
+where a.r=1
+
+
+-- 1077 Project Employees III [Medium]
+
+-- Write an SQL query that reports the most experienced employees in each project. In case of a tie, report all employees with the maximum number of experience years.
+
+
+-- my answer: 
+select project.project_id, employee.employee_id
+from employee  JOIN project ON employee.employee_id = project.employee_id
+where  (project.project_id, employee.experience_years) IN
+(
+select p.project_id,max(e.experience_years) 
+from employee as e JOIN project as p ON e.employee_id = p.employee_id
+group by p.project_id   ) ; 
+
+-- leetcode
+
+WITH t AS (
+SELECT a.project_id, a.employee_id, RANK() OVER(PARTITION BY a.project_id ORDER BY b.experience_years DESC) AS exp
+FROM Project AS a
+LEFT JOIN Employee AS b
+ON a.employee_id = b.employee_id
+)
+
+SELECT project_id, employee_id
+FROM t
+WHERE exp = 1;
+
 
 
