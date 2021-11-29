@@ -1,0 +1,251 @@
+-- 1082: RANK() OVER() can combined with GROUP BY !!!!1
+-- 1097 !! Hard !! day 1 retention rate
+
+
+
+
+
+
+-- 1082 Sales Analysis I [Easy] 1083 Sales Analysis II [Easy] 1084 Sales Analysis III [Easy]
+
+-- Write an SQL query that reports the best seller by total sales price, If there is a tie, report them all.
+select A.seller_id
+From
+( SELECT seller_id, RANK() OVER(ORDER BY SUM(price) DESC) AS rnk -- rank () over can combined with Group By
+FROM Sales
+GROUP BY seller_id) as A
+where A.rnk = 1
+
+with tmp as
+( SELECT seller_id, RANK() OVER(ORDER BY SUM(price) DESC) AS rnk -- rank () over can combined with Group By
+FROM Sales
+GROUP BY seller_id) 
+select tmp.seller_id 
+from tmp.  --- Important!! I always forget this!
+where tmp.rnk=1
+
+
+-- Write an SQL query that reports the buyers who have bought S8 but not iPhone. Note that S8 and iPhone are products present in the Product table.
+
+-- my answer
+select buyer_id. -- should be distinct name
+from sales JOIN product ON sales.product_id = product.product_id
+where product.product_name = 'S8' AND product.product_name != 'iPhone'
+
+-- leetcode answer:
+with tmp as
+( select buyer_id, product_name -- should be distinct name
+from sales JOIN product ON sales.product_id = product.product_id)
+select distinct buyer_id
+from tmp
+WHERE buyer_id NOT IN (SELECT buyer_id FROM tmp WHERE product_name = 'iPhone')
+AND buyer_id IN (SELECT buyer_id FROM tmp WHERE product_name = 'S8');
+
+
+-- Write an SQL query that reports the products that were only sold in spring 2019. That is, between 2019-01-01 and 2019-03-31 inclusive.
+
+select sales.product_id,product.product_name
+from sales JOIN product ON sales.product_id = product.product_id
+where sale_date BETWEEN '2019-01-01' AND '2019-03-31'
+--  wrong!! the question 'only'. 
+--  through my code, I can only find the one sales between date A and B. but cannot find the one 'only'
+
+SELECT DISTINCT a.product_id, b.product_name FROM Sales AS a
+JOIN Product AS b
+ON a.product_id = b.product_id
+WHERE a.product_id NOT IN (SELECT product_id FROM Sales WHERE sale_date < '2019-01-01')
+AND a.product_id NOT IN (SELECT product_id FROM Sales WHERE sale_date > '2019-03-31');
+
+
+-- my code:
+select sales.product_id,product.product_name
+from sales JOIN product ON sales.product_id = product.product_id
+where sales.product_id NOT IN (select product_id from sales where sale_date < '2019-01-01')
+AND sales.product_id NOT IN (select product_id from sales where sale_date > '2019-03-31')
+
+
+
+
+-- 1097. !!!!!!!!!!!! Game Play Analysis V [Hard]
+-- We define the install date of a player to be the first login day of that player.
+-- We also define day 1 retention of some date X to be the number of players whose install date is X and they logged back in on the day right after X, divided by the number of players whose install date is X, rounded to 2 decimal places.
+-- Write an SQL query that reports for each install date, the number of players that installed the game on that day and the day 1 retention.
+
+-- first login date per player
+select player_id, min(event_date)
+from activity
+group by player_id 
+
+-- then JOIN
+
+select *
+from (
+select player_id, min(event_date) as event_date
+from activity
+group by player_id ) a  
+LEFT JOIN activity as b 
+On a.player_id = b.player_id And a.event_date + 1 = b.event_date -- check!!
+
+
+-- final answer:
+select a.event_date as install_dt,
+       count(a. player_id) as installs, -- including calculation, we should add group by
+			 round( count(b.player_id)/ count(a.player_id), 2) as Day1_retention     
+from 
+(select player_id, min(event_date) as event_date
+from activity
+group by player_id ) a  
+LEFT JOIN activity as b 
+On a.player_id = b.player_id And a.event_date + 1 = b.event_date
+group by a.event_date
+
+
+
+
+
+
+1098. Unpopular Books [Medium]
+
+-- Write an SQL query that reports the books that have sold less than 10 copies in the last year, -- 10 copies last year!!!
+-- excluding books that have been available for less than 1 month from today. Assume today is 2019-06-23.
+
+-- pay attention to the requirement: less than 10 copies in the last year. two requirements 1. less than 10 copies 2. last year
+-- date_sub (date1,interval x day/month/year)
+
+SELECT book_id, name FROM Books 
+WHERE available_from < DATE_SUB("2019-06-23", INTERVAL 1 MONTH)
+AND book_id NOT IN (
+SELECT DISTINCT book_id FROM Orders
+WHERE dispatch_date > DATE_SUB("2019-06-23", INTERVAL 1 YEAR)
+GROUP BY book_id
+HAVING SUM(quantity) >= 10);
+
+
+-- 1107. New Users Daily Count [Medium]
+
+-- Write an SQL query that reports for every date within at most 90 days from today, the number of users that logged in for the first time on that date. Assume today is 2019-06-30.
+-- my answer WRONG. but <why?>
+select distinct min(activity_date) as login_date, count(distinct user_id)
+from traffic
+where activity = 'login'
+group by user_id
+having min(activity_date) >= date_sub('2019-06-30',interval 90 day)
+
+-- change to:
+select a.login_date,count(login_date)
+from 
+(
+select min(activity_date) as login_date, count(user_id)
+from traffic
+where activity = 'login'
+group by user_id
+having min(activity_date) >= date_sub('2019-06-30',interval 90 day) ) as a
+group by login_date
+
+
+
+-- leetcode. 
+SELECT login_date, COUNT(user_id) AS user_count
+FROM (
+SELECT DISTINCT user_id, FIRST_VALUE(activity_date) OVER(PARTITION BY user_id ORDER BY activity_date ASC) AS login_date FROM Traffic
+WHERE activity = 'login'
+) AS tmp
+WHERE DATEDIFF("2019-06-30", login_date) <= 90
+GROUP BY login_date;
+
+-- discussion
+with tmp as 
+(
+select user_id, min(activity_date) as login_date
+from traffic
+where activity = 'login' 
+group by user_id
+having min(activity_date) >= date_sub('2019-06-30',interval 90 day)
+)
+
+select login_date, count(*) as user_count
+from tmp
+group by login_date
+order by login_date
+
+-- 1112. Highest Grade For Each Student [medium]
+-- Write a SQL query to find the highest grade with its corresponding course for each student. 
+-- In case of a tie, you should find the course with the smallest course id. The output must be sorted by increasing student_id.
+                    -- row_number
+-- my answer
+select a. student_id,a.course_id,a.grade
+from
+(
+select student_id, course_id, grade,RANK() over (partition by student_id order by grade DESC, course_id) as rn
+from Enrollments) as a
+where a.rn=1
+order by student_id
+-- leetcode: row_number
+SELECT student_id, course_id, grade FROM (
+SELECT *, ROW_NUMBER() OVER(PARTITION BY student_id ORDER BY grade DESC, course_id ASC) AS grade_rnk
+FROM Enrollments
+) AS tmp
+WHERE grade_rnk = 1
+ORDER BY student_id;
+
+
+
+-- 1113. Reported Posts [Easy]
+-- Write an SQL query that reports the number of posts reported yesterday for each report reason. Assume today is 2019-07-05.
+
+-- my code
+select extra as report_reason, count(post_id) as report_count
+from actions
+group by extra
+having  action = 'report' and    -- as here the conditions do not include formula, we don;t need to use HAVING. IT should be WHERE
+action_date = date_sub('2019-07-05',interval 1 day)
+
+-- leetcode
+SELECT extra AS report_reason, COUNT(DISTINCT post_id) AS report_count
+FROM Actions
+WHERE extra IS NOT NULL 
+AND action = 'report'
+AND DATEDIFF("2019-07-05", action_date) = 1
+GROUP BY extra;
+
+
+
+
+
+
+
+
+-- 1126. Active Businesses [Medium]
+
+-- Write an SQL query to find all active businesses.
+
+-- An active business is a business that has more than one event type with occurences greater than the average occurences of that event type among all businesses.
+
+select event_type,sum(occurences) 
+from events
+group by event_type -- occurrence times of each business type
+
+
+select event_type,sum(occurences)/count(distinct business_id) 
+from events
+group by event_type -- average occurrence time (must divided by the business who has this activity type)!!! not ALL business id
+
+select event_type, count(business_id) / ( select count(DISTINCT business_id) from events)  as avg_rate -- too complex, can directly use AVG() function
+from events
+group by event_type -- average occurences 
+
+
+__ LEETCODE answer:
+
+SELECT business_id FROM (
+SELECT a.business_id, a.event_type, a.occurences, b.avg_occ
+FROM Events AS a
+LEFT JOIN (
+SELECT event_type, AVG(occurences) AS avg_occ 
+FROM Events GROUP BY event_type
+) AS b
+ON a.event_type = b.event_type
+) AS tmp
+WHERE occurences > avg_occ
+GROUP BY business_id
+HAVING COUNT(*) > 1;
