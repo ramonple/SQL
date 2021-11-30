@@ -1,5 +1,8 @@
+-- 1127: Haven't solve ??????????
+
 -- 1082: RANK() OVER() can combined with GROUP BY !!!!1
 -- 1097 !! Hard !! day 1 retention rate
+-- retrace: 1097,1132,1041,1042
 
 
 
@@ -249,3 +252,109 @@ ON a.event_type = b.event_type
 WHERE occurences > avg_occ
 GROUP BY business_id
 HAVING COUNT(*) > 1;
+
+
+
+
+
+
+-- 1127. User Purchase Platform [Hard]
+
+-- my answer. WRONG!!!
+select spend_date,platform,sum(amount) as total_amount,count(distinct user_id) as total_users
+from spending
+where platform ='desktop'
+group by spend_date,platform
+UNION
+select spend_date,platform,sum(amount) as total_amount,count(distinct user_id) as total_users
+from spending
+where platform ='mobile'
+group by spend_date,platform
+UNION
+select spend_date,platform,sum(amount) as total_amount,count(user_id) as total_users
+from spending
+where platform = 'mobile' OR platform ='desktop'
+group by spend_date,platform
+
+-- hard. Cannot do it correctly
+
+-- 需要为platform字段构造一个'both'值, 这里用了CASE WHEN END语句
+-- 即使某天没有"双平台同时消费的用户"也要显示
+-- 这里在"table aa"里组合了所有 spend_date 和 platform, 然后LEFT JOIN保证每天都有3个platform项
+-- 再用 COALESCE 语句把NULL值替换成0
+
+-- COALESCE(): Return the first non-null value in a list:
+-- SELECT COALESCE(NULL, NULL, NULL, 'W3Schools.com', NULL, 'Example.com');
+
+
+-- leetcode answer, I cannot run this
+WITH
+
+tmp AS (
+SELECT spend_date, user_id, SUM(amount) AS total_amount,
+(CASE WHEN COUNT(DISTINCT platform) = 2 THEN 'both' ELSE platform END) as platform
+FROM Spending
+GROUP BY spend_date, user_id
+),
+
+tmp1 AS (
+SELECT  DISTINCT spend_date,'mobile' as platform -- only give all variable in that column a name ' mobile'
+FROM Spending
+UNION ALL
+SELECT  DISTINCT spend_date,'both'
+FROM Spending 
+UNION ALL
+SELECT  DISTINCT spend_date,'desktop'
+FROM Spending
+)
+
+
+-- 1132. Reported Posts II [Medium]
+
+-- Write an SQL query to find the average for daily percentage of posts that got removed after being reported as spam, rounded to 2 decimal places.
+
+
+SELECT ROUND(AVG(percentage),2) AS average_daily_percent
+FROM (
+SELECT action_date, 
+(COUNT(DISTINCT b.post_id)/COUNT(DISTINCT a.post_id))*100 AS percentage 
+FROM Actions AS a
+LEFT JOIN Removals AS b
+ON a.post_id = b.post_id
+WHERE a.action = 'report'
+AND a.extra = 'spam'
+GROUP BY a.action_date
+) AS tmp;
+
+-- 注意：由于 Actions 表无主键，因此在计数时一定要加 DISTINCT 去除重复行。
+-- 同一个post_id可能会被不同user_id举报，avg(if(remove_date,1,0)) 和 using(post_id) 会导致重复计入reports，最终比例出错
+
+
+SELECT
+    ROUND(AVG(del*100/total),2) as average_daily_percent
+FROM
+    (SELECT 
+        action_date,
+        COUNT(DISTINCT a.post_id) as total,
+        COUNT(DISTINCT r.post_id) as del 
+    FROM 
+        Actions a LEFT JOIN Removals r USING (post_id)
+    WHERE 
+        action = 'report' and extra = 'spam'
+    GROUP BY 
+        action_date) temp
+
+
+-- 1141. User Activity for the Past 30 Days I [Easy]
+
+-- 1142. User Activity for the Past 30 Days II [Easy]
+
+
+
+
+
+
+
+
+
+
