@@ -349,6 +349,131 @@ FROM
 
 -- 1142. User Activity for the Past 30 Days II [Easy]
 
+-- Write an SQL query to find all the authors that viewed at least one of their own articles, sorted in ascending order by their id.
+select distinct author_id 
+from description 
+where author_id=viewer_id
+order by author_id 
+
+-- Write an SQL query to find all the people who viewed more than one article on the same date, sorted in ascending order by their id.
+-- ??? how to do this?
+
+SELECT DISTINCT viewer_id AS id 
+FROM (
+SELECT viewer_id, view_date 
+FROM description
+GROUP BY viewer_id, view_date
+HAVING COUNT(DISTINCT article_id) > 1
+) AS tmp
+ORDER BY id;
+
+select viewer_id as id
+from description
+group by viewer_id, view_date
+having count(distinct article_id) > 1
+order by id;
+
+
+
+
+
+
+
+
+-- 1158. Market Analysis I [Medium]
+
+-- 1159. Market Analysis II [Hard]
+
+
+-- Write an SQL query to find for each user, the join date and the number of orders they made as a buyer in 2019. 
+-- >> left join. if no orders then 0
+
+select users.user_id as buyer_id,users.join_date,count(order_id) as orders_in_2019
+from users JOIN orders
+ON users.user_id = orders.buyer_id
+where year(order_date) = 2019 
+group by users.user_id,users.join_date
+-- wrong. We should also output the one does not have order in year 2019
+
+select a.user_id, coalesce(b.orders_in_2019,0) as orders_in_2019
+from 
+users as a LEFT JOIN
+(
+select buyer_id, count(order_id) as orders_in_2019
+from orders
+where year(order_date) = 2019
+group by buyer_id) as b
+ON a.user_id = b.buyer_id;
+
+
+-- TOO complicated !!!!!!  NO idea
+
+-- leetcode answer
+SELECT a.user_id AS seller_id, 
+COALESCE( CASE WHEN a.favorite_brand = c.item_brand THEN 'yes' ELSE 'no' END, 'no') AS 2nd_item_fav_brand 
+FROM Users AS a
+-- find the second sell and its corresponding item_id for each seller
+LEFT JOIN (
+ SELECT seller_id, item_id 
+ FROM (
+   SELECT seller_id, item_id,
+   ROW_NUMBER() OVER(PARTITION BY seller_id ORDER BY order_date) AS rnk FROM Orders
+          ) AS tmp
+ WHERE rnk = 2
+                    ) AS b
+ON a.user_id = b.seller_id
+-- find out the prodect id of the favorite brand
+LEFT JOIN Items AS c
+ON b.item_id = c.item_id;
+
+-- split the answer into several sub-questions
+
+--  each user's favor brand's item_id
+-- each favor brand < LEFT JOIN >!!!
+select user_id,item_id 
+from users LEFT JOIN items
+ON favorite_brand = item_brand
+
+-- rank the sells for each seller
+select seller_id,order_date, RANK () OVER (partition by seller_id order by order_date) as rn
+from orders
+
+-- final, but several more columns
+select a.user_id, b.item_id, b.order_date as sell_date,
+Coalesce ( (CASE WHEN b.item_id = c.item_id Then 'Yes' ELSE 'No' END),'No') as favorite_brand
+from 
+Users as a
+left join
+(select seller_id,order_date,item_id, RANK () OVER (partition by seller_id order by order_date) as rn
+from orders) as b
+ON a.user_id = b.seller_id AND b.rn=2
+LEFT JOIN
+( select user_id,item_id 
+from users LEFT JOIN items
+ON favorite_brand = item_brand
+) as c
+ON a.user_id = c.user_id
+
+-- a is shows all information included in USERS table
+-- b we find the second sell of each seller (if exists) and the corresponding item id
+-- c relate the favorite brand to its item id
+
+
+-- simplfy to:
+select a.user_id as seller_id,
+Coalesce ( (CASE WHEN b.item_id = c.item_id Then 'Yes' ELSE 'No' END),'No') as favorite_brand
+from 
+Users as a
+left join
+(select seller_id,order_date,item_id, RANK () OVER (partition by seller_id order by order_date) as rn
+from orders) as b
+ON a.user_id = b.seller_id AND b.rn=2
+LEFT JOIN
+( select user_id,item_id 
+from users LEFT JOIN items
+ON favorite_brand = item_brand
+) as c
+ON a.user_id = c.user_id
 
 
 
