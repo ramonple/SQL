@@ -1,0 +1,185 @@
+
+-- 1164, How to directly give a value to a column in SELECT caulse? 
+   select 10 as A, 5 as B, .....
+
+-- 1179.  Reformat the table, row to column
+
+
+
+
+-- 1164. Product Price at a Given Date [ Medium ]
+
+-- Write an SQL query to find the prices of all products on 2019-08-16. Assume the price of all products before any change is 10.
+
+-- my answer is complicated, but it works
+select product_id, new_price
+from products
+where change_date = '2019-08-16'
+group by product_id   -- if there is no price on 8-16, we should find the day before
+
+UNION  -- why union doesn't work -- needs parentheses
+
+( select product_id, new_price
+from products
+where change_date < '2019-08-16' 
+AND product_id NOT IN 
+(select product_id
+from products
+where change_date = '2019-08-16'
+group by product_id)
+order by change_date DESC
+LIMIT 1 )
+
+UNION
+-- find the one which has no record before 2019-08-16
+
+select product_id, 10 as price
+from products
+group by product_id
+having min(change_date)> '2019-08-16'
+
+
+-- leetcode answer (similar)
+WITH
+
+tmp1 AS (
+SELECT a.product_id, a.new_price AS price FROM Products AS a
+JOIN (
+SELECT product_id, MAX(change_date) AS change_date
+FROM Products
+WHERE change_date <= '2019-08-16'
+GROUP BY product_id
+) AS b
+ON a.product_id = b.product_id
+AND a.change_date = b.change_date
+),
+
+tmp2 AS (
+SELECT product_id, 10 AS price FROM Products 
+WHERE change_date > '2019-08-16'
+AND product_id NOT IN (SELECT product_id FROM tmp1)
+)
+
+SELECT * FROM tmp1
+UNION 
+SELECT * FROM tmp2
+ORDER BY price DESC, product_id ASC;
+
+
+-- 1173. Immediate Food Delivery I [Easy]. 1174. Immediate Food Delivery II [Medium]
+
+-- If the preferred delivery date of the customer is the same as the order date then the order is called 
+-- immediate otherwise it's called scheduled.
+
+-- Write an SQL query to find the percentage of immediate orders in the table, rounded to 2 decimal places.
+
+select 
+ROUND ( (
+select count(a. delivery_id) as immediate_order
+from delivery as a
+where a.order_Date = a.customer_pref_delivery_date)
+/ (
+select count(b. delivery_id) as all_order
+from delivery as b) , 2) as immediate_percentage
+
+SELECT
+ROUND(100* (SELECT COUNT(*) FROM Delivery WHERE order_date = customer_pref_delivery_date) / (SELECT COUNT(*) FROM Delivery),2) 
+AS immediate_percentage;
+
+
+-- If the preferred delivery date of the customer is the same as the order date then the order is called immediate otherwise it's called scheduled.
+
+The first order of a customer is the order with the earliest order date that customer made. It is guaranteed that a customer has exactly one first order.
+
+Write an SQL query to find the percentage of immediate orders in the first orders of all customers, rounded to 2 decimal places.
+
+-- My code
+-- first check how many customers
+select count(distinct customer_id) as Total_first_order
+from delivery
+
+-- find the first order to each customer ??
+
+-- my code:
+select ROUND(100*
+SUM(CASE WHEN TK.ord = TK.pre  THEN 1 ELSE 0 END)/
+(select count(distinct customer_id) as Total_first_order
+from delivery),2)   as immediate_percentage
+from 
+(
+select customer_id,ord, pre 
+from (
+select  customer_id, order_date as ord, customer_pref_delivery_date as pre, rank() over( partition by customer_id order by order_Date) as rk
+from delivery) as a
+where rk = 1) as TK
+
+-- leetcode:
+SELECT 
+ROUND(100 * COUNT(*)/(SELECT COUNT(DISTINCT customer_id) FROM Delivery),2) 
+AS immediate_percentage
+FROM Delivery AS a
+JOIN (
+SELECT
+customer_id, MIN(order_date) AS first_order
+FROM Delivery
+GROUP BY customer_id
+) AS b
+ON a.customer_id = b.customer_id
+AND a.order_date = b.first_order
+WHERE a.order_date = a.customer_pref_delivery_date
+
+-- the one from leetcode is simplier. First we can use MIN(order_date) to find the first order date, instead of the RANK()OVER() window function
+-- and then let a.first_date = b.order_date AND a.order_date = a.prefer_date to find the satisfied ones.
+
+-- 1179. Reformat Department Table [Easy] !!! Reformat the table, row to column
+-- Write an SQL query to reformat the table such that there is a department id column and a revenue column for each month.
+select id, 
+SUM(CASE WHEN month = 'Jan' THEN revenue ELSE NULL END) AS Jan_Revenue,
+SUM(CASE WHEN month = 'Feb' THEN revenue ELSE NULL END) AS Feb_Revenue,
+SUM(CASE WHEN month = 'Mar' THEN revenue ELSE NULL END) AS Mar_Revenue,
+SUM(CASE WHEN month = 'Apr' THEN revenue ELSE NULL END) AS Apr_Revenue,
+SUM(CASE WHEN month = 'May' THEN revenue ELSE NULL END) AS May_Revenue,
+SUM(CASE WHEN month = 'Jun' THEN revenue ELSE NULL END) AS Jun_Revenue,
+SUM(CASE WHEN month = 'Jul' THEN revenue ELSE NULL END) AS Jul_Revenue,
+SUM(CASE WHEN month = 'Aug' THEN revenue ELSE NULL END) AS Aug_Revenue,
+SUM(CASE WHEN month = 'Sep' THEN revenue ELSE NULL END) AS Sep_Revenue,
+SUM(CASE WHEN month = 'Oct' THEN revenue ELSE NULL END) AS Oct_Revenue,
+SUM(CASE WHEN month = 'Nov' THEN revenue ELSE NULL END) AS Nov_Revenue,
+SUM(CASE WHEN month = 'Dec' THEN revenue ELSE NULL END) AS Dec_Revenue
+from department
+group by id
+
+
+
+-- 1193. Monthly Transactions I [Medium]
+
+-- Write an SQL query to find for each month and country, the number of transactions and their 
+-- total amount, the number of approved transactions and their total amount.
+
+
+-- my code:
+select total.month, total.country, total.trans_count, app.approved_count, total.trans_total_amount, app.approved_total_amount
+from 
+( select   DATE_FORMAT(a.trans_date, "%Y-%m") as month, a.country, count(a. country) as trans_count, sum(a.amount) as trans_total_amount
+from transaction a 
+group by country, DATE_FORMAT(a.trans_date, "%Y-%m")  )   as total
+JOIN 
+( select DATE_FORMAT(b.trans_date, "%Y-%m") as month, b.country, count(b.country) as approved_count, sum(b.amount) as approved_total_amount
+from transaction b 
+where b.state='approved'
+group by b.country, DATE_FORMAT(b.trans_date, "%Y-%m") ) as app
+on  total.country=app.country AND total.month=app.month
+
+-- leetcode:
+SELECT DATE_FORMAT(a.trans_date, "%Y-%m") AS month, a.country,
+COUNT(a.id) AS trans_count,
+COUNT(b.id) AS approved_count,
+SUM(a.amount) AS trans_total_amount,
+SUM(COALESCE(b.amount,0)) AS approved_total_amount 
+FROM 
+transaction AS a
+LEFT JOIN (
+SELECT id, country, state, amount,  DATE_FORMAT(trans_date, "%Y-%m") AS month FROM transaction WHERE state = 'approved'
+) AS b
+ON a.id = b.id
+GROUP BY DATE_FORMAT(a.trans_date, "%Y-%m"), a.country;
