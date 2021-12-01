@@ -1,0 +1,144 @@
+
+-- 1204 a. SUM() OVER (partition by ... order by ...)
+        b. In With .. as ,.. as caluse, the second one can directly use the first one !!!
+           With tmp as (), tmp1 as (select xxx from tmp )
+        c. how to use "rank number' to determine the one satisfies the condition
+        
+        
+        
+        
+        
+
+-- 1194. Tournament Winners [Hard]
+
+-- The winner in each group is the player who scored the maximum total points within the group. In the case of a tie, the lowest player_id wins.
+
+-- Write an SQL query to find the winner in each group.
+
+-- my code: cannot run
+select  match_id, ( case when first_score > second_score then first_player 
+              when first_score < second_score then second_player
+						 else min(first_player,second_player) end ) as player_id
+from matches
+group by match_id
+
+-- we need to focus on the sum scores of each player, instead of in each match
+
+-- leetcode:
+SELECT group_id, player_id FROM (
+SELECT a.group_id, a.player_id,
+ROW_NUMBER() OVER(PARTITION BY a.group_id ORDER BY IFNULL(b.score,0) DESC, a.player_id) AS rnk
+FROM Players AS a
+LEFT JOIN (
+SELECT player_id, SUM(score) AS score FROM (
+SELECT match_id, first_player AS player_id, first_score AS score
+FROM Matches
+UNION ALL
+SELECT match_id, second_player AS player_id, second_score AS score
+FROM Matches
+) AS x
+GROUP BY player_id
+) AS b
+ON a.player_id = b.player_id
+) AS tmp
+WHERE rnk = 1;
+
+-- split the answer:
+
+select a.*,b.*
+from
+players as a
+LEFT JOIN
+( select player_id, sum(score) as score
+from 
+(select match_id,first_player as player_id,first_score as score
+from matches
+UNION all  -- does no delete the duplications
+select match_id, second_player as player_id, second_score as score
+from matches ) as x
+group by player_id ) as b
+ON a.player_id = b.player_id
+
+-- out out the corresponding score of each player, and the player's corresponding team
+-- how to deal with the NULL?
+
+select temp.group_id, temp.player_id
+from (
+select a.group_id, a.player_id, ROW_NUMBER() OVER(PARTITION BY a.group_id ORDER BY IFNULL(b.score,0) DESC, a.player_id) AS rnk -- IFNULL
+from
+players as a
+LEFT JOIN
+( select player_id, sum(score) as score
+from 
+(select match_id,first_player as player_id,first_score as score
+from matches
+
+UNION all  -- does no delete the duplications
+select match_id, second_player as player_id, second_score as score
+from matches ) as x
+group by player_id ) as b
+ON a.player_id = b.player_id ) as temp
+where rnk = 1
+
+
+
+
+
+
+-- 1204. Last Person to Fit in the Elevator [Medium]
+
+-- The maximum weight the elevator can hold is 1000.
+
+-- Write an SQL query to find the person_name of the last person who will fit in the elevator without exceeding the weight limit. 
+-- It is guaranteed that the person who is first in the queue can fit in the elevator.
+
+
+WITH
+tmp AS (
+SELECT person_id, person_name, weight, turn,
+SUM(weight) OVER(ORDER BY turn ASC) AS cum_weight
+FROM Queue
+),
+tmp1 AS (
+SELECT person_name, turn, cum_weight FROM tmp
+WHERE cum_weight <= 1000
+)
+SELECT person_name FROM tmp1
+WHERE turn >= ALL(SELECT turn FROM tmp1);
+
+
+
+
+
+-- 1205. Monthly Transactions II [Medium]
+
+
+-- Write an SQL query to find for each month and country, the number of approved transactions and their total amount, 
+-- the number of chargebacks and their total amount.
+
+WITH
+tmp AS (
+SELECT a.trans_id AS id, b.country, 'checkback' AS state, b.amount, a.trans_date 
+FROM Chargebacks AS a
+LEFT JOIN Transactions AS b
+ON a.trans_id = b.id
+
+UNION ALL
+    
+SELECT * FROM Transactions
+WHERE state = 'approved'
+)
+
+SELECT DATE_FORMAT(trans_date, "%Y-%m") AS month, country,
+SUM(CASE WHEN state = 'approved' THEN 1 ELSE 0 END) AS approved_count,
+SUM(CASE WHEN state = 'approved' THEN amount ELSE 0 END) AS approved_amount,
+SUM(CASE WHEN state = 'checkback' THEN 1 ELSE 0 END) AS chargeback_count,
+SUM(CASE WHEN state = 'checkback' THEN amount ELSE 0 END) AS chargeback_amount
+FROM tmp
+GROUP BY DATE_FORMAT(trans_date, "%Y-%m"), country;
+
+
+
+
+
+
