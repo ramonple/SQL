@@ -4,6 +4,7 @@
 
 -- 1179.  Reformat the table, row to column
 
+-- 1193: how to extrac the year and month from a data: DATE_FORMAT('2019-01-01', "%Y-%m")
 
 
 
