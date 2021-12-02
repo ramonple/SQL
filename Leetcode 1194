@@ -1,13 +1,16 @@
+-- 1194. SUM() OVER (order by)
 
 -- 1204 a. SUM() OVER (partition by ... order by ...)
         b. In With .. as ,.. as caluse, the second one can directly use the first one !!!
            With tmp as (), tmp1 as (select xxx from tmp )
         c. how to use "rank number' to determine the one satisfies the condition
         
+-- 1125: [HARD] how to calculate the start and end data for a continuous time period!!!
+                CASE When State = 'a' THEN DateDiff( datelist, '2019-01-01') - row_number() Over (Partition BY state Ordery by datelist) as group_rnk
         
-        
-        
-        
+	Then use First Value () OVER ( Parition by group_rnk Order by datelist) as start_date
+                 First Value () OVER ( Parition by group_rnk Order by datelist DESC ) as end_date
+         
 
 -- 1194. Tournament Winners [Hard]
 
@@ -237,3 +240,149 @@ ON a.team_id = b.team
 order by num_points DESC
 
 -- one team, the one with zero score, disappeared -- IFNULL(b.score,0)
+
+
+
+
+-- 1225. Report Contiguous Dates [hard]
+
+-- A system is running one task every day. Every task is independent of the previous tasks. The tasks can fail or succeed.
+
+-- Write an SQL query to generate a report of period_state for each continuous interval of days in the period from 2019-01-01 to 2019-12-31.
+
+-- period_state is 'failed' if tasks in this interval failed or 'succeeded' if tasks in this interval succeeded. Interval of days are retrieved as start_date and end_date.
+
+-- Order result by start_date.
+
+select state,date
+from
+( select 'failed' as state, fail_date as date
+from Failed
+UNION ALL
+select 'succeeded' as state, success_date as date
+from succeeded) as tmp
+where date BETWEEN '2019-01-01' and '2019-12-31'
+order by date 
+
+-- how to write the one in the answer? pivot table?
+- ，通过给记录排序得到rank，然后根据rank跟连续时间组之间的差值固定，
+-- 分辨出不同组的连续数据，最后选择同组数据中最大值和最小值，作为每组数据的start_date和end_date
+
+-- leetcode:
+WITH 
+
+t1 as (
+SELECT * FROM (
+(SELECT fail_date AS datelist, 'failed' AS state FROM Failed)
+UNION ALL
+(SELECT success_date, 'succeeded' from Succeeded)
+) AS x
+WHERE YEAR(datelist) = 2019
+), 
+
+t2 AS (
+SELECT
+datelist,
+state,
+CASE WHEN state = 'succeeded'  THEN DATEDIFF(datelist, '2018-12-31') - ROW_NUMBER() OVER (PARTITION BY state ORDER BY state, datelist)
+WHEN state = 'failed'  THEN DATEDIFF(datelist, '2017-12-31') - ROW_NUMBER() over (PARTITION BY state ORDER BY state, datelist) 
+ELSE -100 END AS group_num
+FROM t1
+order by datelist
+)
+
+SELECT DISTINCT
+state AS period_state,
+FIRST_VALUE(datelist) OVER (PARTITION BY group_num ORDER BY datelist) AS start_date,
+FIRST_VALUE(datelist) OVER (PARTITION BY group_num ORDER BY datelist DESC) AS end_date
+FROM t2
+ORDER BY start_date;
+
+-- it seems my code is the t1 here, following the idea shows here, update my previous code:
+
+
+select state as period_state,
+FIRST_VALUE(datelist) OVER (PARTITION BY group_num ORDER BY datelist) AS start_date,
+FIRST_VALUE(datelist) OVER (PARTITION BY group_num ORDER BY datelist DESC) AS end_date
+from (
+select state,datelist,
+CASE WHEN state = 'succeeded'  THEN DATEDIFF(datelist, '2018-12-31') - ROW_NUMBER() OVER (PARTITION BY state ORDER BY  datelist)
+WHEN state = 'failed'  THEN DATEDIFF(datelist, '2017-12-31') - ROW_NUMBER() over (PARTITION BY state ORDER BY  datelist) -- two continuous failed dates
+ELSE -100 END AS group_num
+from 
+( select state,datelist
+from
+( select 'failed' as state, fail_date as datelist
+from Failed
+UNION ALL
+select 'succeeded' as state, success_date as datelist
+from succeeded) as tp
+where datelist BETWEEN '2019-01-01' and '2019-12-31') as tmp
+order by datelist
+
+) as ttp
+ORDER BY start_date; 
+-- my so many duplicated rows ??? 
+-- can unserstand what they are doing, but I am still confused why I have so many duplicated rows - it will be okay after add ' DISTINCT' after selection
+
+
+
+
+-- 1241. Number of Comments per Post [Easy]
+
+-- Submissions may contain duplicate posts. You should treat them as one post.
+
+
+
+-- Write an SQL query to find number of comments per each post.
+
+-- Result table should contain post_id and its corresponding number of comments, and must be sorted by post_id in ascending order.
+
+-- Submissions may contain duplicate comments. You should count the number of unique comments per post.
+
+-- Submissions may contain duplicate posts. You should treat them as one post.
+
+-- my code, too complicated
+SELECT a.sub_id AS post_id, IFNULL(b.number_of_comments,0) AS
+number_of_comments
+from 
+( SELECT DISTINCT sub_id FROM Submissions
+WHERE parent_id IS NULL) as a  -- all parent post
+LEFT JOIN (
+SELECT DISTINCT parent_id, COUNT(DISTINCT sub_id) AS number_of_comments FROM Submissions
+WHERE parent_id IS NOT NULL
+GROUP BY parent_id
+) AS b -- number of comments to each post
+ON a.sub_id = b.parent_id
+ORDER BY post_id;
+
+
+-- discussion
+select s1.sub_id as post_id,
+    count(distinct s2.sub_id) as number_of_comments
+from Submissions s1
+left join Submissions s2
+on s2.parent_id = s1.sub_id
+where s1.parent_id is null
+group by s1.sub_id
+
+
+
+-- 1251. Average Selling Price [Easy]
+-- (product_id, start_date, end_date) is the primary key for this table.
+-- Each row of this table indicates the price of the product_id in the period from start_date to end_date.
+-- For each product_id there will be no two overlapping periods. That means there will be no two intersecting periods for the same product_id.
+
+-- Have no idea
+SELECT a.product_id, 
+ROUND(SUM(b.price * a.units)/SUM(a.units), 2) AS  average_price -- must be sum(units)
+FROM (
+SELECT DISTINCT product_id, purchase_date, units
+FROM UnitsSold
+) AS a
+LEFT JOIN Prices AS b
+ON a.product_id = b.product_id
+AND a.purchase_date BETWEEN b.start_date AND b.end_date
+GROUP BY a.product_id
+-- should be more familar with how two tables can be combined 
+
