@@ -142,3 +142,98 @@ GROUP BY DATE_FORMAT(trans_date, "%Y-%m"), country;
 
 
 
+
+-- 1211. Queries Quality and Percentage [Easy]
+-- We define query quality as: The average of the ratio between query rating and its position.
+
+-- We also define poor_query_percentage as: The percentage of all queries with rating less than 3.
+
+-- Write an SQL query to find each query name, the quality and poor_query_percentage.
+
+-- Both quality and poor_query_percentage should be rounded to 2 decimal places.
+-- my code
+select query_name,ROUND(  avg(rating/ position),2) as quality,
+ROUND( (SUM(case when rating < 3 then 1 else 0 end)/count(rating) ) * 100, 2) as poor_query_percentage
+from queries
+group by query_name
+
+
+-- leetcode
+SELECT query_name,
+ROUND(AVG(rating/position),2) AS quality,
+ROUND(SUM(100 * CASE WHEN rating < 3 THEN 1 ELSE 0 END)/COUNT(DISTINCT result),2) AS poor_query_percentage
+FROM Queries
+GROUP BY query_name;
+
+
+-- 1212. Team Scores in Football Tournament [Medium]
+
+You would like to compute the scores of all teams after all matches. Points are awarded as follows:
+
+A team receives three points if they win a match (Score strictly more goals than the opponent team).
+A team receives one point if they draw a match (Same number of goals as the opponent team).
+A team receives no points if they lose a match (Score less goals than the opponent team).
+Write an SQL query that selects the team_id, team_name and num_points of each team in the tournament after all described matches. Result table should be ordered by num_points (decreasing order). In case of a tie, order the records by team_id (increasing order).
+
+ -- summarize each match conclusion
+( select 
+( case when host_goals > guest_goals then host_team else null end) as hostwin,
+( case when host_goals <  guest_goals then guest_team else null end) as gustwin,
+( case when host_goals = guest_goals then host_team else null end) as amatch,
+( case when host_goals = guest_goals then guest_team else null end) as bmatch
+from matches ) as tmp
+
+-- have no idea what is the next step
+
+-- leetcode
+SELECT a.team_id, a.team_name, IFNULL(b.score,0) AS num_points 
+FROM Teams AS a
+LEFT JOIN (
+SELECT team, SUM(score) AS score
+FROM (
+SELECT match_id, host_team AS team,
+CASE WHEN host_goals > guest_goals THEN 3 
+WHEN host_goals = guest_goals THEN 1
+ELSE 0 END AS score
+FROM Matches
+UNION ALL
+SELECT match_id, guest_team AS team,
+CASE WHEN guest_goals > host_goals THEN 3 
+WHEN guest_goals = host_goals THEN 1
+ELSE 0 END AS score
+FROM Matches
+) AS tmp
+GROUP BY team
+) AS b
+ON a.team_id = b.team
+ORDER BY num_points DESC, team_id;
+
+-- we should summarize the score according to each match
+-- add 3 scores for the winner of each match
+
+select a.team_id,a.team_name,IFNULL( b.score,0) as num_points
+from Teams as a 
+LEFT JOIN 
+(
+select team, sum(score) as score
+from
+(
+select match_id, host_team as team, 
+       ( case when host_goals > guest_goals THEN 3 
+            WHEN host_goals = guest_goals THEN 1
+            ELSE 0 END) as score
+from matches
+
+UNION ALL
+
+select match_id, guest_team as team, 
+       ( case when host_goals < guest_goals THEN 3 
+            WHEN host_goals = guest_goals THEN 1
+            ELSE 0 END) as score
+from matches
+) as tmp  
+group by team) as b
+ON a.team_id = b.team
+order by num_points DESC
+
+-- one team, the one with zero score, disappeared -- IFNULL(b.score,0)
