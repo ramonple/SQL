@@ -63,6 +63,26 @@ SELECT name FROM student_tbl WHERE name REGEXP '^[aeiou]ok$' ;
 
 2. Date Function
 
+
+# importance: DATE_ADD (xxx, INTERVAL number UNIT(day,month,year) )
+              DATE_SUB
+              DATE_FORMAT
+              DAYNAME -> weekday name, MONDAY, TUESDAY, ...
+              
+              DAYOFWEEK()
+              DAYOFMONTH()
+              DAYOFYEAR()
+              
+              EXTRACT() -> extract a single part
+                       Extract ( unit from date) -> extract (day from "2018-07-15")
+                       
+              
+              
+              
+              
+              
+              
+              
 https://www.geeksforgeeks.org/sql-date-functions-set-1/?ref=lbp
 https://www.geeksforgeeks.org/sql-date-functions-set-2/?ref=lbp
 https://www.geeksforgeeks.org/sql-date-functions/?ref=lbp
@@ -235,9 +255,12 @@ ROUND(): The ROUND() function is used to round a numeric field to the number of 
 NOW(): The NOW() function returns the current system date and time. SELECT NOW() FROM table_name;
                                                                     SELECT NAME, NOW() AS DateTime FROM Students; 
 FORMAT(): The FORMAT() function is used to format how a field is to be displayed. SELECT FORMAT(column_name,format) FROM table_name; 
-                                                                                  SELECT NAME, FORMAT(Now(),'YYYY-MM-DD') AS Date FROM Students; 
-
-
+SELECT NAME, FORMAT(Now(),'YYYY-MM-DD') AS Date FROM Students; 
+              
+              
+              
+Greatest(): output the largest value.      select greatest(5,7,8) -> output: 8
+Least()
 
 
 
