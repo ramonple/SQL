@@ -1,0 +1,13 @@
+SQL DATE Clause
+
+
+1. EXTRACT(YEAR FROM date)
+
+SELECT EXTRACT(YEAR FROM '2018-07-22') 
+                    2018
+              
+           --- >  SELECT EXTRACT(MONTH FROM date), SELECT EXTRACT(DAY FROM date), 
+                    
+2. SELECT DATE_FORMAT("2017-06-15", "%Y");   2017
+   SELECT DATE_FORMAT("2017-06-15", "%Y-%M") 2017-June
+   SELECT DATE_FORMAT("2017-06-15", "%Y-%m") 2017-06
