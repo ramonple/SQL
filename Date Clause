@@ -11,3 +11,16 @@ SELECT EXTRACT(YEAR FROM '2018-07-22')
 2. SELECT DATE_FORMAT("2017-06-15", "%Y");   2017
    SELECT DATE_FORMAT("2017-06-15", "%Y-%M") 2017-June
    SELECT DATE_FORMAT("2017-06-15", "%Y-%m") 2017-06
+
+
+3. DATEDIFF(): 
+It returns the difference in days between two date values.
+Syntax: SELECT DATEDIFF("2017-06-25", "2017-06-15");
+Output: 10
+
+4. DATE_ADD(), DATE_SUB()
+Syntax: SELECT DATE_ADD("2018-07-16", INTERVAL 10 DAY);
+Output: 2018-07-16
+Syntax: SELECT DATE_SUB("2017-06-15", INTERVAL 10 DAY);
+Output: 2017-06-05
+
