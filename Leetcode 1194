@@ -9,8 +9,19 @@
                 CASE When State = 'a' THEN DateDiff( datelist, '2019-01-01') - row_number() Over (Partition BY state Ordery by datelist) as group_rnk
         
 	Then use First Value () OVER ( Parition by group_rnk Order by datelist) as start_date
-                 First Value () OVER ( Parition by group_rnk Order by datelist DESC ) as end_date
-         
+                 First Value () OVER ( Parition by group_rnk Order by datelist DESC ) as end_date. 
+		  
+-----------> 1285 also for continuous data and find the start and end dates
+---> TIPS: MUST use select DISTINCT!!!! 
+ 
+-- 1280 !! How to use Cross JOIN > FROM a CROSS JOIN b.   DOES NOT NEED ON xxxx
+
+
+
+
+
+
+
 
 -- 1194. Tournament Winners [Hard]
 
@@ -385,4 +396,144 @@ ON a.product_id = b.product_id
 AND a.purchase_date BETWEEN b.start_date AND b.end_date
 GROUP BY a.product_id
 -- should be more familar with how two tables can be combined 
+
+
+
+-- 1264. Page Recommendations [Medium]
+
+-- Write an SQL query to recommend pages to the user with user_id = 1 using the pages that your friends liked. 
+-- It should not recommend pages you already liked.
+
+-- Return result table in any order without duplicates.
+
+-- first find user_id = 1's friend
+
+-- my code:
+select DISTINCT likes.page_id as recommended_page
+from 
+( select user1_id as user1_friend
+from friendship
+where user2_id = 1
+UNION
+select user2_id as user1_friend
+from friendship
+where user1_id = 1) as tmp
+JOIN
+likes
+On tmp.user1_friend = likes.user_id
+where likes.page_id NOT IN
+(select page_id
+from likes
+where user_id = 1 )
+order by recommended_page
+
+-- leetcode:
+SELECT DISTINCT b.page_id AS recommended_page FROM (
+SELECT user2_id AS user_id FROM Friendship
+WHERE user1_id = 1
+UNION
+SELECT user1_id AS user_id FROM Friendship
+WHERE user2_id = 1
+) AS a
+JOIN Likes AS b
+ON a.user_id = b.user_id
+AND b.page_id NOT IN (SELECT page_id FROM Likes WHERE user_id = 1)
+ORDER BY b.page_id;
+
+
+
+
+-- 1270. All People Report to the Given Manager [Medium]
+-- Write an SQL query to find employee_id of all employees that directly or indirectly report their work to the head of the company.
+-- The indirect relation between managers will not exceed 3 managers as the company is small.
+-- Return result table in any order without duplicates.
+
+select employee_id
+from employees 
+where manager_id = 1 and employee_id <> 1
+UNION
+select employee_id
+from employees
+where manager_id IN 
+( select employee_id
+from employees 
+where manager_id = 1 and employee_id <> 1) 
+UNION 
+select employee_id 
+from employees
+where manager_id  IN
+(
+select employee_id
+from employees
+where manager_id IN 
+( select employee_id
+from employees 
+where manager_id = 1 and employee_id <> 1) 
+)
+
+
+
+-- 1280. Students and Examinations [Easy]
+
+-- Write an SQL query to find the number of times each student attended each exam.
+-- Order the result table by student_id and subject_name.
+
+--- my answer WRONG!!!!!!!!!
+select students.student_id,students.student_name, Examinations.subject_name, IFNULL(count(Examinations.student_id),0) as attended_exams
+from students LEFT JOIN Examinations 
+On students.student_id = Examinations.student_id
+LEFT JOIN Subjects ON Subjects.subject_name = Examinations.subject_name
+group by students.student_id, Examinations.subject_name,students.student_name
+-- wrong. cannot show Alex (never attend exam). I have already used the left joint and ifnull clause
+
+-- needs to update to CROSS JOIN
+
+select students.student_id,students.student_name, Subjects.subject_name, count(Examinations.student_id) as attended_exams
+from students  
+LEFT JOIN Examinations  On students.student_id = Examinations.student_id
+CROSS JOIN Subjects 
+group by students.student_id,students.student_name,Subjects.subject_name
+
+
+-- 1285. Find the Start and End Number of Continuous Ranges [Medium]
+-- Since some IDs have been removed from Logs. Write an SQL query to find the start and end number of continuous ranges in table Logs.
+
+-- Order the result table by start_id.
+
+select DISTINCT First_Value (log_id) over (partition by rk order by log_id) as start_id,
+First_value(log_id) over (partition by rk order by log_id DESC) as end_id
+from
+(select log_id,log_id - row_number() over() as rk
+from Logs ) as a
+
+-- 1294. Weather Type in Each Country [Easy]
+
+-- Write an SQL query to find the type of weather in each country for November 2019.
+-- The type of weather is Cold if the average weather_state is less than or equal 15, 
+-- Hot if the average weather_state is greater than or equal 25 and Warm otherwise.
+
+
+select a.country_name,
+( CASE WHEN b.avgtemp <= 15 Then 'Cold'
+	   When b.avgtemp >= 25 Then 'Hot'
+		 ELSE 'Warm' END )  as Type
+from 
+Countries as a
+JOIN
+(
+SELECT country_id, avg(weather_state) as avgtemp
+FROM Weather
+WHERE day BETWEEN "2019-11-01" AND "2019-11-30"
+group by country_id) as b
+Where a.country_id = b.country_id
+
+
+
+
+
+
+
+
+
+
 
