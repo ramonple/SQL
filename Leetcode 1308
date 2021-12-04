@@ -6,6 +6,15 @@
          Preceding refers to rows before the current row, where the following argument refers to rows after the current row. 
          e.g., ROWS BETWEEN 3 preceding and current row - looks at three rows above the current row and current row -- MUST first 3 proceding and then current row
 
+-- 1369 [Hard] -- use CASE WHEN in WHERE clause
+                  select xxx
+                  from table
+                  where Case when xx then xx else xx end
+
+
+
+
+
 
 1308. Running Total for Different Genders [Medium]
 -- Write an SQL query to find the total score for each gender at each day.
@@ -169,5 +178,111 @@ ORDER BY 1;
 -- a. when there is no transacions (have noticed)
 -- b. during min ( transaction time) to max (transaction time), a internal time is skipped (haven't noticed)!!
     --> the  0<= possible transaction numbers <= row number of transation table 
+
+
+
+-- 1341. Movie Rating [Medium]
+
+-- Find the name of the user who has rated the greatest number of http://movies.In case of a tie, return lexicographically smaller user name.
+-- Find the movie name with the highest average rating in February 2020.In case of a tie, return lexicographically smaller movie name.
+
+(SELECT name AS results FROM Users AS a
+JOIN Movie_Rating AS b
+ON a.user_id = b.user_id
+GROUP BY b.user_id
+ORDER BY COUNT(DISTINCT movie_id) DESC, name 
+LIMIT 1 )
+UNION ALL
+(SELECT title AS results FROM Movies AS a
+JOIN Movie_Rating AS b
+ON a.movie_id = b.movie_id
+WHERE b.created_at Between '2020-02-02' and '2020-02-28'
+GROUP BY b.movie_id
+ORDER BY AVG(b.rating) DESC, title ASC
+LIMIT 1);
+
+
+
+-- 1350. Students With Invalid Departments [Easy]
+-- Write an SQL query to find the id and the name of all students who are enrolled in departments that no longer exists.
+SELECT a.id, a.name FROM Students AS a
+LEFT JOIN Departments AS b
+ON a.department_id = b.id
+WHERE b.id iS NULL;
+
+
+-- 1355. Activity Participants [Medium]
+-- Write an SQL query to find the names of all the activities with neither maximum, nor minimum number of participants.
+-- Return the result table in any order. Each activity in table Activities is performed by any person in the table Friends.
+
+select tmp.name as Activitiy
+from
+( select a.id,a.name, count(f.id) as num
+from Activities as a JOIN Friends as f
+on a.name = f.activity
+group by a.id, a.name
+order by num ) as tmp
+where tmp.num <>1
+and tmp.num <>
+(select count(name)
+from Activities)
+with 
+temp AS
+(select activity, COUNT(activity) as num
+from Friends
+Group by activity)
+
+select activity from temp
+where num!=(select max(num) from temp)
+and num!=(select min(num) from temp)
+
+
+1364. Number of Trusted Contacts of a Customer [Medium]
+-- Write an SQL query to show the second most recent activity of each user.
+-- If the user only has one activity, return that one.
+-- A user can't perform more than one activity at the same time. Return the result table in any order.
+
+WITH
+
+tmp AS(
+SELECT username, activity, startDate, endDate,
+ROW_NUMBER() OVER(PARTITION BY username ORDER BY startDate DESC) AS rnk,
+COUNT(activity) OVER(PARTITION BY username) AS num -- we can add this column
+FROM UserActivity 
+)
+
+SELECT DISTINCT username, activity, startDate, endDate FROM tmp 
+WHERE 
+CASE WHEN num = 1 THEN rnk = 1
+ELSE rnk = 2
+END;
+
+-- use CASE WHEN in WHERE clause
+
+--- my code:
+select a.username, a.activity, a.startDate, a.endDate
+from
+( select username, activity , startDate, endDate, rank() over (partition by username order by startDate DESC) as rk, count(activity) over(partition by username) as num
+from UserActivity ) as a
+where CASE WHEN num = 1 then rk = 1 else rk=2 end
+
+
+-- 1378. Replace Employee ID w/ The Unique Identifier [easy]
+-- Write an SQL query to show the unique ID of each user, If a user doesn't have a unique ID replace just show null.
+select IFNULL (employeeUNI.unique_id,NULL),employees.name
+from Employees LEFT JOIN employeeUNI
+on employees.id=employeeUNI.id
+order by name
+
+
+-- 1384. Total Sales Amount by Year [Hard]
+
+
+
+
+
+
+
+
 
 
