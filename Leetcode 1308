@@ -10,6 +10,11 @@
                   select xxx
                   from table
                   where Case when xx then xx else xx end
+                 
+                 
+-- 1384 [Hard] -- how to caculate the date difference
+                        DATEDIFF(period_end, period_start)+1
+                        
 
 
 
@@ -275,10 +280,57 @@ on employees.id=employeeUNI.id
 order by name
 
 
--- 1384. Total Sales Amount by Year [Hard]
+-- 1384. Total Sales Amount by Year [Hard] !!!!!!!!!!!!!!!
 
+- Write an SQL query to report the Total sales amount of each item for each year, 
+-- with corresponding product name, product_id, product_name and report_year.
+-- Dates of the sales years are between 2018 to 2020. Return the result table ordered by product_id and report_year.
 
+WITH 
 
+cte AS(
+SELECT product_id, '2018' AS report_year,
+       CASE
+       WHEN period_start >= '2019-01-01' THEN 0
+       WHEN period_end < '2019-01-01' AND period_start < '2019-01-01' THEN  DATEDIFF(period_end, period_start)+1 -- start and both in year 2018
+       ELSE DATEDIFF('2019-01-01', period_start) -- start < 2019-01-01 and end >2019-01-01. Start in 2018 and does not end in 2018
+       END AS days_in_year,
+       average_daily_sales
+FROM Sales 
+    
+UNION 
+    
+SELECT product_id, '2019' AS report_year,
+       CASE
+       WHEN period_start >='2020-01-01' THEN 0
+       WHEN period_end < '2020-01-01' AND period_start > '2018-12-31' THEN  DATEDIFF(period_end, period_start)+1 -- start in year 2019 and ends in 2019
+       WHEN period_end < '2020-01-01' AND period_start <= '2018-12-31' THEN DATEDIFF(period_end, '2018-12-31') -- start in 2018 adn ends in 2019
+       WHEN period_end >= '2020-01-01' AND period_start > '2018-12-31' THEN  DATEDIFF('2020-01-01', period_start) -- does not end in 2019 and start in 2019
+       ELSE DATEDIFF('2020-01-01', '2019-01-01') -- start in 2018 ends later 2019
+       END AS days_in_year,
+       average_daily_sales
+FROM Sales 
+
+UNION 
+    
+SELECT product_id, '2020' AS report_year,
+       CASE
+       WHEN period_start >= '2020-01-01' THEN  DATEDIFF(period_end, period_start)+1 -- start in 2020 and ends in 2020
+       WHEN period_end <'2020-01-01' THEN 0 -- ends before 2020
+       ELSE DATEDIFF(period_end, '2019-12-31') -- start before 2020 and ends in 2020
+       END AS days_in_year,
+       average_daily_sales
+FROM Sales 
+)
+
+SELECT c.product_id, 
+       p.product_name,  
+       c.report_year,
+       c.days_in_year*c.average_daily_sales AS total_amount
+FROM cte AS c
+JOIN Product AS p ON c.product_id = p.product_id 
+WHERE c.days_in_year > 0
+ORDER BY 1, 3;
 
 
 
