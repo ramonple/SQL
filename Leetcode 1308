@@ -16,7 +16,8 @@
                         DATEDIFF(period_end, period_start)+1
                         
 
-
+-- 1393!! how to calculate the sum according to different characteristics:
+          SUM(CASE WHEN operation = 'Sell' THEN price ELSE (-1) * price END) AS capital_gain_loss
 
 
 
@@ -337,4 +338,37 @@ ORDER BY 1, 3;
 
 
 
+
+
+-- 1393. Capital Gain/Loss [Medium]
+
+-- Write an SQL query to report the Capital gain/loss for each stock.
+-- The capital gain/loss of a stock is total gain or loss after buying and selling the stock one or many times.
+-- Return the result table in any order.
+
+select buy.stock_name, sell.earn-buy.pay as captical_gain_loss
+from
+( select a.stock_name as stock_name,sum(a.price) as pay
+from 
+(select stock_name, price
+from Stocks
+where operation='Buy') as a
+group by  a.stock_name ) as buy
+JOIN
+(
+select b.stock_name as stock_name,sum(b.price) as earn
+from (
+select stock_name, price
+from Stocks
+where operation='Sell') as b
+group by b.stock_name) as sell
+On buy.stock_name = sell.stock_name
+order by captical_gain_loss DESC
+
+-- My answer is too completed. 
+-- from Leetcode: !!!
+SELECT stock_name,
+SUM(CASE WHEN operation = 'Sell' THEN price ELSE (-1) * price END) AS capital_gain_loss
+FROM Stocks
+GROUP BY stock_name;
 
