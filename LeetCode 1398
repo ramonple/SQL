@@ -1,0 +1,41 @@
+1398. Customers Who Bought Product A and B but Not C [Medium]
+
+-- Write an SQL query to report the customer_id and customer_name of customers who bought products 
+-- "A", "B" but did not buy the product "C" since we want to recommend them buy this product.
+-- Return the result table ordered by customer_id.
+
+-- my answer
+select  DISTINCT Customers.customer_name, Customers.customer_id
+from Customers JOIN orders On Customers.customer_id = Orders.customer_id
+where customers.customer_id IN (
+select customer_id 
+from Orders 
+where product_name = 'A' )
+AND customers.customer_id IN (
+select customer_id 
+from Orders 
+where product_name ='B')
+AND customers.customer_id NOT IN
+(
+select customer_id 
+from Orders 
+where product_name = 'C')
+
+-- leetcode
+SELECT c.customer_id, c.customer_name
+FROM customers AS c
+WHERE EXISTS(SELECT * FROM orders WHERE customer_id = c.customer_id AND product_name = 'A')
+AND EXISTS(SELECT * FROM orders WHERE customer_id = c.customer_id AND product_name = 'B')
+AND NOT EXISTS(SELECT * FROM orders WHERE customer_id = c.customer_id AND product_name = 'C')
+ORDER BY c.customer_id;
+
+-- 1407. Top Travellers [Easy]
+-- Write an SQL query to report the distance travelled by each user.
+-- Return the result table ordered by travelled_distance in descending order, 
+-- if two or more users travelled the same distance, order them by their name in ascending order.
+
+SELECT a.name, IFNULL(SUM(b.distance), 0) as travelled_distance -- NOTICE: IFNULL
+FROM Users AS a
+LEFT JOIN Rides AS b ON a.id = b.user_id
+GROUP BY a.name
+order by travelled_distance DESC,a.name
