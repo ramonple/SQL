@@ -39,3 +39,59 @@ FROM Users AS a
 LEFT JOIN Rides AS b ON a.id = b.user_id
 GROUP BY a.name
 order by travelled_distance DESC,a.name
+
+
+-- 1412. Find the Quiet Students in All Exams [Hard]
+
+-- A "quite" student is the one who took at least one exam and didn't score neither the high score nor the low score.
+
+-- Write an SQL query to report the students (student_id, student_name) being "quiet" in ALL exams.
+
+-- Don't return the student who has never taken any exam. Return the result table ordered by student_id.
+
+
+select student_id, student_name
+from student
+where student_id NOT IN (
+select distinct student_id
+from
+( select  student_id, rank() over (partition by exam_id order by score) as rk
+from Exam) as bottom
+where bottom.rk=1) 
+AND student_id NOT IN (
+select distinct student_id
+from
+( select  student_id, rank() over (partition by exam_id order by score DESC) as rp
+from Exam) as top
+where top.rp=1)
+AND student_id IN 
+(
+select student_id
+from Exam
+group by student_id
+having count(student_id) > 0 ) 
+
+--leetcode
+WITH
+
+tmp AS (
+SELECT exam_id, student_id, score,
+MAX(score) OVER(PARTITION BY exam_id) AS max_score,
+MIN(score) OVER(PARTITION BY exam_id) AS min_score
+FROM Exam
+),
+
+tmp1 AS (
+SELECT DISTINCT a.student_id, a.student_name FROM Student AS a
+JOIN tmp AS b
+ON a.student_id = b.student_id
+WHERE b.score = b.max_score OR b.score = b.min_score
+
+)
+
+SELECT DISTINCT a.student_id, a.student_name FROM Student AS a
+JOIN Exam AS b
+ON a.student_id = b.student_id
+WHERE a.student_id NOT IN (SELECT student_id FROM tmp1)
+ORDER BY a.student_id;
+
