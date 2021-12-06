@@ -1,5 +1,7 @@
 -- 1435 IMPORTANT!!!
 
+-- 1140: Interesting. Compare the values in different conditions
+
 
 
 
@@ -143,3 +145,41 @@ GROUP BY a.bin;
 
 
 -- 1440. Evaluate Boolean Expression [Medium]
+-- Write an SQL query to evaluate the boolean expressions in Expressions table.
+
+-- Return the result table in any order.
+
+-- The query result format is in the following example.
+
+
+-- Have NO idea
+SELECT a.left_operand, a.operator, a.right_operand, 
+CASE WHEN b.value > c.value AND a.operator = '>' THEN 'true'
+WHEN b.value = c.value AND a.operator = '=' THEN 'true'
+WHEN b.value < c.value AND a.operator = '<' THEN 'true'
+ELSE 'false' END AS value
+FROM Expression AS a
+LEFT JOIN Variables AS b ON a.left_operand = b.name
+LEFT JOIN Variables AS c ON a.right_operand = c.name;
+
+
+-- 1445. Apples & OrangesS
+-- Write an SQL query to report the difference between number of apples and oranges sold each day.
+
+-- Return the result table ordered by sale_date in format ('YYYY-MM-DD').
+SELECT a.sale_date, a.sold_num-b.sold_num as diff
+FROM (
+SELECT sale_date, fruit, sold_num FROM Sales
+WHERE fruit = 'apples'
+) AS a
+LEFT JOIN (
+SELECT sale_date, fruit, sold_num FROM Sales
+WHERE fruit = 'oranges'
+) AS b
+ON a.sale_date = b.sale_date
+order by a.sale_date
+
+
+
+
+
