@@ -1,3 +1,12 @@
+-- 1435 IMPORTANT!!!
+
+
+
+
+
+
+
+
 1398. Customers Who Bought Product A and B but Not C [Medium]
 
 -- Write an SQL query to report the customer_id and customer_name of customers who bought products 
@@ -95,3 +104,42 @@ ON a.student_id = b.student_id
 WHERE a.student_id NOT IN (SELECT student_id FROM tmp1)
 ORDER BY a.student_id;
 
+
+
+-- 1435. Create a Session Bar Chart [Easy]
+
+-- You want to know how long a user visits your application. 
+-- You decided to create bins of "[0-5>", "[5-10>", "[10-15>" and "15 minutes or more" and count the number of sessions on it.
+-- Write an SQL query to report the (bin, total) in any order.
+
+WITH 
+
+tmp AS (
+SELECT session_id, duration,
+CASE WHEN duration/60 < 5 THEN '[0-5>'
+     WHEN duration/60 >=5 AND duration/60 < 10 THEN '[5-10>'
+     WHEN duration/60 >=10 AND duration/60 < 15 THEN '[10-15>'
+     ELSE '15 or more'
+     END AS bin
+FROM Sessions
+),
+
+tmp1 AS (
+SELECT '[0-5>' AS bin
+UNION
+SELECT '[5-10>' AS bin
+UNION
+SELECT '[10-15>' AS bin
+UNION
+SELECT '15 or more' AS bin
+)
+
+SELECT a.bin, IFNULL(COUNT(b.session_id),0) AS total
+FROM tmp1 AS a
+LEFT JOIN tmp AS b
+ON a.bin = b.bin
+GROUP BY a.bin;
+
+
+
+-- 1440. Evaluate Boolean Expression [Medium]
