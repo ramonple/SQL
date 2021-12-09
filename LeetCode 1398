@@ -2,11 +2,11 @@
 
 -- 1140: Interesting. Compare the values in different conditions
 
+-- 1454: How to check the consecutive days ??????
 
+-- 1459: Initially, I cannot understand this question
 
-
-
-
+-- 1479: DAYOFWEEK (2=monday, ..., 1 = sunday)
 
 
 1398. Customers Who Bought Product A and B but Not C [Medium]
@@ -178,6 +178,143 @@ WHERE fruit = 'oranges'
 ) AS b
 ON a.sale_date = b.sale_date
 order by a.sale_date
+
+
+-- 1454. Active Users [Medium]
+
+-- Write an SQL query to find the id and the name of active users.
+
+-- Active users are those who logged in to their accounts for 5 or more consecutive days.
+
+-- Return the result table ordered by the id.
+
+WITH
+
+tmp AS(
+SELECT a.id, a.name, b.login_date,
+ROW_NUMBER() OVER(PARTITION BY a.id ORDER BY b.login_date) AS rnk, 
+DATEDIFF(b.login_date, '2020-01-01') AS diff 
+FROM Accounts AS a
+LEFT JOIN (
+SELECT DISTINCT id, login_date FROM Logins
+) AS b
+ON a.id = b.id
+)
+
+SELECT DISTINCT id, name FROM tmp
+GROUP BY id, name, diff-rnk -- use diff-rank to check whether continuous or not
+HAVING COUNT(login_date) >= 5;
+
+
+-- 1459. Rectangles Area [Medium]
+
+-- Write an SQL query to report of all possible rectangles which can be formed by any two points of the table.
+-- Each row in the result contains three columns (p1, p2, area) where:
+-- p1 and p2 are the id of two opposite corners of a rectangle and p1 < p2.
+-- Area of this rectangle is represented by the column area.
+-- Report the query in descending order by area in case of tie in ascending order by p1 and p2.
+
+
+-- p1 should be less than p2 and area greater than 0.
+-- p1 = 1 and p2 = 2, has an area equal to |2-4| * |8-7| = 2.
+-- p1 = 2 and p2 = 3, has an area equal to |4-2| * |7-10| = 6.
+-- p1 = 1 and p2 = 3 It's not possible because the rectangle has an area equal to 0-- .
+
+
+
+-- Initially, I cannot understand this question
+SELECT a.id AS p1, b.id AS p2, 
+ABS(a.x_value - b.x_value) * ABS(a.y_value - b.y_value) AS area
+FROM Points AS a
+LEFT JOIN Points AS b
+ON a.id < b.id
+WHERE ABS(a.x_value - b.x_value) <> 0 
+AND ABS(a.y_value - b.y_value) <> 0
+ORDER BY area DESC, p1, p2;
+
+
+-- 1468. Calculate Salaries [Medium]
+
+-- Write an SQL query to find the salaries of the employees after applying taxes.
+-- The tax rate is calculated for each company based on the following criteria:
+
+-- 0% If the max salary of any employee in the company is less than 1000$.
+-- 24% If the max salary of any employee in the company is in the range [1000, 10000] inclusive.
+-- 49% If the max salary of any employee in the company is greater than 10000$.
+-- Return the result table in any order. Round the salary to the nearest integer.
+
+select company_id, employee_id,employee_name,
+( CASE WHEN salary <= 1000 Then salary
+     WHEN salary <= 10000 Then salary*(1-0.24)
+		 ELSE  salary * (1-0.49) END ) as salary 
+from Salaries
+order by company_id, employee_id
+
+-- WRONG! bu company!!!
+-- the answer from leetcode is evey smart, we can add one more column which represent the maximum salary of this company
+WITH
+
+tmp AS (
+SELECT company_id, employee_id, employee_name, salary, 
+MAX(salary) OVER(PARTITION BY company_id) AS max_sal
+FROM Salaries   
+)
+
+SELECT company_id, employee_id, employee_name,
+CASE WHEN max_sal < 1000  THEN ROUND(salary) 
+WHEN max_sal BETWEEN 1000 AND 10000 THEN ROUND(salary * (1-0.24))
+ELSE ROUND(salary * (1-0.49))
+END AS salary
+FROM tmp;
+
+-- My new answer:
+select a.company_id, a.employee_id,a.employee_name,
+( CASE WHEN max_sal <= 1000 Then round(salary)
+     WHEN max_sal <= 10000 Then round(salary*(1-0.24))
+		 ELSE  round(salary * (1-0.49)) END ) as salary 
+from (
+select company_id,employee_id,employee_name, salary, MAX(salary) OVER(PARTITION BY company_id) AS max_sal
+from salaries) as a
+order by company_id, employee_id
+
+
+
+
+
+-- 1479. Sales by Day of the Week [Hard]
+
+-- You are the business owner and would like to obtain a sales report for category items and day of the week.
+-- Write an SQL query to report how many units in each category have been ordered on each day of the week.
+-- Return the result table ordered by category.
+
+-- get the day of the week
+
+Select a.item_category as category,
+SUM( CASE WHEN DAYOFWEEK(b.order_date) =2 THEN b.quantity ELSE 0 END) as MONDAY,
+SUM( CASE WHEN DAYOFWEEK(b.order_date) =3 THEN b.quantity ELSE 0 END) as Tuesday,
+SUM( CASE WHEN DAYOFWEEK(b.order_date) =4 THEN b.quantity ELSE 0 END) as Wednesday,
+SUM( CASE WHEN DAYOFWEEK(b.order_date) =5 THEN b.quantity ELSE 0 END) as Thursday,
+SUM( CASE WHEN DAYOFWEEK(b.order_date) =6 THEN b.quantity ELSE 0 END) as Friday,
+SUM( CASE WHEN DAYOFWEEK(b.order_date) =7 THEN b.quantity ELSE 0 END) as Saturday,
+SUM( CASE WHEN DAYOFWEEK(b.order_date) =1 THEN b.quantity ELSE 0 END) as Sunday
+from items AS a LEFT JOIN Orders as b
+on a.item_id=b.item_id
+group by a.item_category
+order by  a.item_category
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
