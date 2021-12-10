@@ -15,6 +15,19 @@
         LEFT('2020-06-20 12:00',7) 
 
 
+-- 1517 -- REGEXP is the operator used when performing regular expression pattern matches.
+                                                -- ^ caret(^) matches Beginning of string
+						-- $ End of string
+						-- [A-Z]  match any upper case letter.
+						-- [a-z]  match any lower case letter
+						-- [0-9]  match any digit from 0 through to 9.
+						-- *	Zero or more instances of string preceding it
+-- matches any of the patterns p1, p2, or p3 (p1|p2|p3):
+-- Gives all the names containing ‘be’ or ‘ae’.Example – Abel, Baer.   -- SELECT name FROM student_tbl WHERE name REGEXP 'be|ae' 
+
+-- Matches any character listed between the square brackets ([abc]):
+-- Gives all the names containing ‘j’ or ‘z’.Example – Lorentz, Rajs.  SELECT name FROM student_tbl WHERE name REGEXP '[jz]' ;
+
 
 
 1398. Customers Who Bought Product A and B but Not C [Medium]
@@ -375,11 +388,92 @@ HAVING AVG(c.duration) > (SELECT AVG(duration) FROM tmp);
 
 -- 1511. Customer Order Frequency [Easy]
 
+-- Write an SQL query to report the customer_id and customer_name of customers who have spent at least $100 in each month of June and July 2020.
+-- Return the result table in any order.
+
+
+-- my answer 
+select a.customer_id,a.name
+from 
+(
+(select c.customer_id,c.name
+from Orders as o JOIN Customers as c on c.customer_id= o.customer_id
+                 JOIN Product as p on p.product_id=o.product_id
+where o.order_date BETWEEN '2020-06-01' AND '2020-06-30'
+group by c.customer_id,c.name
+HAVING sum(o.quantity * p.price) >= 100) as a
+JOIN
+(select c.customer_id,c.name
+from Orders as o JOIN Customers as c on c.customer_id= o.customer_id
+                 JOIN Product as p on p.product_id=o.product_id
+where o.order_date BETWEEN '2020-07-01' AND '2020-07-31'
+group by c.customer_id,c.name
+HAVING sum(o.quantity * p.price) >= 100) as b
+ON a.customer_id = b.customer_id 
+) 
+
+
+
+-- leetcode:
+select customer_id,name from customers
+where customer_id IN
+(SELECT a.customer_id 
+FROM Orders AS a JOIN Product AS b
+ON a.product_id = b.product_id
+WHERE a.order_date BETWEEN '2020-06-01' AND '2020-06-30'
+GROUP BY a.customer_id
+HAVING SUM(a.quantity * b.price) >= 100
+)
+AND customer_id IN
+(SELECT a.customer_id 
+FROM Orders AS a JOIN Product AS b
+ON a.product_id = b.product_id
+WHERE a.order_date BETWEEN '2020-07-01' AND '2020-07-31'
+GROUP BY a.customer_id
+HAVING SUM(a.quantity * b.price) >= 100
+)
+
+
+
 -- 1517. Find Users With Valid E-Mails [Easy]
+
+
+-- Write an SQL query to find the users who have valid emails.
+-- A valid e-mail has a prefix name and a domain where:
+-- The prefix name is a string that may contain letters (upper or lower case), digits, underscore '_', period '.' and/or dash '-'. The prefix name must start with a letter.
+-- The domain is '@leetcode.com'.
+
+-- my answer, HAVE NO idea how to check whehter starts with letter
+select userid,name,mail
+from Users
+where mail LIKE '%@leetcode%' 
+
+-- leetcode
+SELECT * FROM users
+WHERE mail REGEXP '^[A-Za-z][a-zA-Z0-9_.-]*@leetcode.com$' -- REGEXP is the operator used when performing regular expression pattern matches.
+-- NOTICE the * 
+
+                                                -- ^ caret(^) matches Beginning of string
+						-- $ End of string
+						-- [A-Z]  match any upper case letter.
+						-- [a-z]  match any lower case letter
+						-- [0-9]  match any digit from 0 through to 9.
+
+
+
+
 
 -- 1527. Patients With a Condition [Easy]
 
+-- Write an SQL query to report the patient_id, patient_name all conditions of patients who have Type I Diabetes. Type I Diabetes always starts with DIAB1 prefix
 
+select *
+from Patients
+where conditions REGEXP 'DIAB1'
+
+select  *
+from patients
+where conditions LIKE '%DIAB1%'
 
 
 
