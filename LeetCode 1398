@@ -8,6 +8,14 @@
 
 -- 1479: DAYOFWEEK (2=monday, ..., 1 = sunday)
 
+-- 1484: Group_Concat()
+         MySQL GROUP_CONCAT() function returns a string with concatenated non-NULL value from a group.
+ 
+--1495  when the day time with time: 2020-06-20 12:00, how should we get the year and month?
+        LEFT('2020-06-20 12:00',7) 
+
+
+
 
 1398. Customers Who Bought Product A and B but Not C [Medium]
 
@@ -305,6 +313,39 @@ order by  a.item_category
 
 
 
+-- 1484. Group Sold Products By The Date [Easy]
+
+-- Write an SQL query to find for each date, the number of distinct products sold and their names.
+-- The sold-products names for each date should be sorted lexicographically.
+-- Return the result table ordered by sell_date.
+
+select sell_date,count(distinct product),GROUP_CONCAT(DISTINCT product ORDER BY product) AS products
+from Activities
+group by sell_date
+
+
+
+
+
+-- 1495. Friendly Movies Streamed Last Month [Easy]
+-- Write an SQL query to report the distinct titles of the kid-friendly movies streamed in June 2020.
+-- Return the result table in any order.
+select DISTINCT a.title
+FROM Content AS a
+JOIN TVProgram AS b
+ON a.content_id = b.content_id
+where a.Kids_content ='Y' and a.content_type='Movies' AND LEFT(b.program_date,7) ='2020-06'
+
+
+
+
+
+
+-- 1501. Countries You Can Safely Invest In [Medium]
+
+-- A telecommunications company wants to invest in new countries. The company intends to invest in the countries where the average call duration of the calls in this country is strictly greater than the global average call duration.
+-- Write an SQL query to find the countries where this company can invest.
+-- Return the result table in any order.
 
 
 
@@ -314,6 +355,12 @@ order by  a.item_category
 
 
 
+
+-- 1511. Customer Order Frequency [Easy]
+
+-- 1517. Find Users With Valid E-Mails [Easy]
+
+-- 1527. Patients With a Condition [Easy]
 
 
 
