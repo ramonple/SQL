@@ -1,0 +1,133 @@
+-- 1543: FORMAT: how to deal with black space, how to deal with upper and lower case
+         -- The TRIM() function removes the space character OR other specified characters from the start or end of a string. 
+    
+
+
+
+
+-- 1532. The Most Recent Three Orders [Medium]
+
+-- Write an SQL query to find the most recent 3 orders of each user. If a user ordered less than 3 orders return all of their orders.
+-- Return the result table sorted by customer_name in ascending order and in case of a tie by the customer_id in ascending order. If there still a tie, order them by the order_date in descending order.
+
+
+select c.name, c.customer_id, a.order_date,a.order_id, a.cost
+from 
+(select customer_id, order_date,order_id, cost,rank() over (partition by customer_id order by order_date DESC) as rnk
+from Orders) as a JOIN Customers as c
+ON a.customer_id = c.customer_id
+where rnk<=3
+order by c.name, c.customer_id,a.order_date DESC
+
+
+
+
+-- 1543. Fix Product Name Format [Easy]
+-- Since table Sales was filled manually in the year 2000, product_name may contain leading and/or trailing white spaces, also they are case-insensitive.
+-- Write an SQL query to report
+-- product_name in lowercase without leading or trailing white spaces.
+-- sale_date in the format 'YYYY-MM'
+--  total：the number of times the product was sold in this month.
+-- Return the result table ordered by product_name in ascending order, in case of a tie order it by sale_date in ascending order.
+
+-- LEFT(date,7)
+
+SELECT LOWER(TRIM(product_name)) AS product_name, 
+LEFT(sale_date, 7) AS sale_date, COUNT(*) AS total FROM Sales
+GROUP BY LOWER(TRIM(product_name)), LEFT(sale_date, 7)
+ORDER BY product_name, sale_date;
+
+-- DATE_Format(date,'%Y-%m')
+
+SELECT LOWER(TRIM(product_name)) AS product_name, 
+date_format(sale_date, '%Y-%m') AS sale_date, COUNT(*) AS total FROM Sales
+GROUP BY LOWER(TRIM(product_name)), date_format(sale_date, '%Y-%m') 
+ORDER BY product_name, sale_date;
+
+
+
+-- 1549. The Most Recent Orders for Each Product [Medium]
+
+-- Write an SQL query to find the most recent order(s) of each product.
+-- Return the result table sorted by product_name in ascending order and in case of a tie by the product_id in ascending order. If there still a tie, order them by the order_id in ascending order.
+
+select p.product_name,a.product_id, a.order_id,a.order_date
+from
+(
+select product_id, order_id, order_date,rank() over(partition by product_id order by order_date DESC) as rnk
+from Orders) as a JOIN Products as p ON a.product_id=p.product_id
+where a.rnk=1
+
+
+-- leetcode:
+WITH
+
+tmp AS (
+SELECT a.product_name, a.product_id, b.order_id, b.order_date,
+RANK() OVER(PARTITION BY a.product_name, a.product_id ORDER BY b.order_date DESC) AS rnk
+FROM Products AS a
+JOIN Orders AS b
+ON a.product_id = b.product_id
+)
+
+SELECT product_name, product_id, order_id, order_date FROM tmp
+WHERE rnk = 1
+ORDER BY product_name, product_id, order_id;
+
+
+
+-- 1555. Bank Account Summary [Medium]
+
+
+
+-- Leetcode Bank (LCB) helps its coders in making virtual payments. 
+-- Our bank records all transactions in the table Transaction, we want to find out the current balance of all users 
+-- and check wheter they have breached their credit limit (If their current credit is less than 0).
+
+-- Write an SQL query to report.
+
+-- user_id
+-- user_name
+-- credit, current balance after performing transactions.
+-- credit_limit_breached, check credit_limit ("Yes" or "No")
+
+-- my code: has the problem when what to check the current balance
+with
+t1 as (
+select user_id,user_name,amount as credit_minus
+from users as u JOIN Transactions as t
+ON u.user_id = t.paid_by)
+,
+t2 as 
+(select user_id,user_name, amount as credit_add
+from users as u JOIN Transactions as t
+ON u.user_id = t.paid_to)
+
+select Users.user_id, Users.user_name, IFNULL(Users.credit - t1.credit_minus + t2.credit_add, Users.credit) as credit
+from Users LEFT JOIN  t1 on Users.user_id = t1.user_id
+           LEFT JOIN  t2 on Users.user_id = t2.user_id
+
+-- UPDATE TO:
+
+with
+t1 as (
+select user_id,user_name,amount as credit_minus
+from users as u JOIN Transactions as t
+ON u.user_id = t.paid_by)
+,
+t2 as 
+(select user_id,user_name, amount as credit_add
+from users as u JOIN Transactions as t
+ON u.user_id = t.paid_to)
+,
+t3 as (
+select Users.user_id, Users.user_name, IFNULL(Users.credit - t1.credit_minus + t2.credit_add, Users.credit) as credit
+from Users LEFT JOIN  t1 on Users.user_id = t1.user_id
+           LEFT JOIN  t2 on Users.user_id = t2.user_id)
+					 
+select *,CASE WHEN credit <= 0 Then 'Yes' ELSE 'No' END as credit_limit_breached
+from t3
+
+
+
+
