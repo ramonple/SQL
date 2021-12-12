@@ -130,4 +130,97 @@ from t3
 
 
 
+-- 1565. Unique Orders and Customers Per Month [Easy]
+-- Write an SQL query to find the number of unique orders and the number of unique customers with invoices > $20 for each different month
+select DATE_FORMAT(order_date, '%Y-%m')  as month, count (order_in) as order_count, count(customer_id) as customer_count
+from Orders
+where invoice > 20
+Group by DATE_FORMAT(order_date, '%Y-%m')
+order by DATE_FORMAT(order_date, '%Y-%m')
+
+select LEFT(order_date,7) as month, count (order_in) as order_count, count(customer_id) as customer_count
+from Orders
+where invoice > 20
+Group by LEFT(order_date, 7) 
+order by LEFT(order_date, 7) 
+
+
+
+-- 1571. Warehouse Manager [Easy]
+-- Write an SQL query to report, How much cubic feet of volume does the inventory occupy in each warehouse.
+
+select warehouse.name, sum(units*product_volume) as volume
+from warehouse JOIN 
+( select product_id, product_name, width*Length*height as product_volume
+from Products) as p
+ON warehouse.product_id = p.product_id
+group by warehouse.name
+
+SELECT a.name AS warehouse_name,
+SUM(a.units * b.Width * b.Length * b.Height) AS volume
+FROM Warehouse AS a
+LEFT JOIN Products AS b
+ON a.product_id = b.product_id
+GROUP BY a.name;
+
+
+
+-- 1581. Customer Who Visited but Did Not Make Any Transactions [Easy]
+-- Write an SQL query to find the IDs of the users who visited without making any transactions and the number of times they made these types of visits.
+-- my anser WRONG!!
+select v.customer_id, count(v.visit_id IS NULL) as count_no_trans
+from Visits as v LEFT JOIN Transactions as t ON v.visit_id = t.visit_id
+group by v.customer_id
+order by count_no_trans DESC, v.customer_id
+-- leetcode
+SELECT a.customer_id, COUNT(a.visit_id) AS count_no_trans FROM Visits AS a
+LEFT JOIN Transactions AS b
+ON a.visit_id = b.visit_id
+WHERE b.transaction_id IS NULL
+GROUP BY a.customer_id;
+-- rewrite
+select v.customer_id,count(v.visit_id) as count_no_trans
+from Visits as v LEFT JOIN Transactions as t ON v.visit_id = t.visit_id -- correct
+where t.transaction_id IS NULL
+group by v.customer_id
+order by count_no_trans DESC, v.customer_id
+
+
+
+-- 1587. Bank Account Summary II [Easy]
+-- Write an SQL query to report the name and balance of users with a balance higher than 10000. The balance of an account is equal to the sum of the amounts of all transactions involving that account.
+select a.name SUM(amount)f as balance
+from Users as a JOIN transactions as b ON a.acount = b.account
+group by a.name
+Having sum(amount) > 10000
+
+-- 1607. Sellers With No Sales [Easy]
+-- Write an SQL query to report the names of all sellers who did not make any sales in 2020.
+select seller_name 
+from Seller
+where seller_id NOT IN ( 
+select DISTINCT seller_id 
+from Orders 
+where sale_date BETWEEN '2020-01-01' and '2020-12-31'
+)
+order  by seller_name
+
+
+
+- 1623. All Valid Triplets That Can Represent a Country [Easy]
+-- There is a country with three schools, where each student is enrolled in exactly one school. The country is joining a competition and wants to select one student from each school to represent the country such that:
+
+SELECT a.student_name AS 'member_A',
+b.student_name AS 'member_B',
+c.student_name AS 'member_C'
+FROM SchoolA AS a
+JOIN SchoolB AS b
+ON a.sutdent_id <> b.sutdent_id
+AND a.student_name <> b.student_name
+JOIN SchoolC AS c
+ON a.sutdent_id <> c.sutdent_id
+AND b.sutdent_id <> c.sutdent_id
+AND a.student_name <> c.student_name
+AND b.student_name <> c.student_name;
+
 
