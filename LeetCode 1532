@@ -1,6 +1,32 @@
 -- 1543: FORMAT: how to deal with black space, how to deal with upper and lower case
          -- The TRIM() function removes the space character OR other specified characters from the start or end of a string. 
-    
+ -- 1569: how to calculate the purchase frequency of each customer of each type of product
+            ---- count() over( )
+	    ---- dense_rank() over()
+
+-- 1613 NEW TYPE OF QUESTION!!!
+        Recursive
+	   -- Recursion is achieved by WITH statement: WITH R AS (Select 1 AS n)
+                                                                  <query involving R>
+                          The recursive version of WITH statement references to itself while computing output:
+			                                WITH R AS (< query involving R> )
+							        <query involving R>
+--------------------------------------------------------------------------------------------------------------------------------					    
+         WITH expression_name (column_list)
+AS
+(
+    -- Anchor member
+    initial_query  
+    UNION ALL
+    -- Recursive member that references expression_name.
+    recursive_query  
+)
+-- references expression name
+SELECT *
+FROM   expression_name
+--------------------------------------------------------------------------------------------------------------------------------
+
+
 
 
 
@@ -204,6 +230,78 @@ from Orders
 where sale_date BETWEEN '2020-01-01' and '2020-12-31'
 )
 order  by seller_name
+
+-- 1596. Most Frequent Products of Each Customer [Medium]
+
+-- Write an SQL query to find the most frequently ordered product(s) for each customer.
+
+-- The result table should have the product_id and product_name for each customer_id who ordered at least one order. Return the result table in any order.
+
+-- my code wrong!!
+
+WITH
+
+tmp AS (
+SELECT a.customer_id, b.product_id, c.product_name,
+COUNT(b.order_id) OVER(PARTITION BY a.customer_id, b.product_id) AS freq -- caculate the purchase frequency
+FROM Customers AS a
+JOIN Orders AS b
+ON a.customer_id = b.customer_id
+JOIN Products AS c
+ON b.product_id = c.product_id
+),
+
+tmp1 AS (
+SELECT customer_id, product_id, product_name, freq,
+DENSE_RANK() OVER(PARTITION BY customer_id ORDER BY freq DESC) AS rnk
+FROM tmp
+)
+
+SELECT DISTINCT customer_id, product_id, product_name FROM tmp1
+WHERE rnk = 1;
+
+WITH
+
+tmp AS (
+SELECT a.customer_id, b.product_id, c.product_name,
+COUNT(b.order_id) OVER(PARTITION BY a.customer_id, b.product_id) AS freq -- caculate the purchase frequency
+FROM Customers AS a
+JOIN Orders AS b
+ON a.customer_id = b.customer_id
+JOIN Products AS c
+ON b.product_id = c.product_id
+),
+
+tmp1 AS (
+SELECT customer_id, product_id, product_name, freq,
+DENSE_RANK() OVER(PARTITION BY customer_id ORDER BY freq DESC) AS rnk
+FROM tmp
+)
+
+SELECT DISTINCT customer_id, product_id, product_name FROM tmp1
+WHERE rnk = 1;
+
+
+
+-- 1613. Find the Missing IDs [Medium]
+-- Write an SQL query to find the missing customer IDs. The missing IDs are ones that are not in the Customers table but are in the range between 1 and the maximum customer_id present in the table.
+-- Notice that the maximum customer_id will not exceed 100.
+ 
+WITH RECURSIVE id_seq AS (
+SELECT 1 as continued_id
+UNION 
+SELECT continued_id + 1
+FROM id_seq
+WHERE continued_id < (SELECT MAX(customer_id) FROM Customers) 
+)
+
+SELECT continued_id AS ids
+FROM id_seq
+WHERE continued_id NOT IN (SELECT customer_id FROM Customers)
+ORDER BY ids;  
+
+
+
 
 
 
