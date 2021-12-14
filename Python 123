@@ -1,0 +1,61 @@
+https://python123.io/student/series/25/modules/289
+
+--------------------------   1 man-machine interaction ---------------------------------------------
+
+Q2: 
+a. How to input a float number? 
+Notice that number was created with float(input()) ,int(input()) returns an integer, a number with no decimal point, 
+while text created with input() returns a string(can be writen as str(input()), too). 
+When you want the user to type in a decimal use float(input()), if you want the user to type in an integer use int(input()), 
+but if you want the user to type in a string use input().
+
+-- int(input())
+-- float(input())
+-- eval(input())
+
+b. How to keep particular # of decimals:
+print("{:.3f}".format(n))
+
+c. limit the number of decimals
+>>> a
+>>> round(a,2)
+
+for i in range():
+
+rang(n) -> output from 0 to n-1
+
+end ='\n'
+end='##'
+end='' # ends with nothing
+
+In python, range(1,5) = 1234
+rang(5) = 01234
+
+print(f' xxx') NEVER forget f!!!
+
+
+print('{:.2f}'.format(area)) 
+
+
+
+
+print(m // n)  #  // integer division operator
+
+< align problem >:
+def function (a,b):
+    print(a//b)
+    print(a/b)
+    
+    -- Notice the align
+    
+    
+FORMAT:
+
+a = int(input())
+b = int(input())
+
+print("{} + {} = {}".format(a, b, a + b))
+print("{} - {} = {}".format(a, b, a - b))
+print("{} * {} = {}".format(a, b, a * b))
+print("{} / {} = {}".format(a, b, a / b))
+
