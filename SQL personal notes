@@ -54,3 +54,122 @@ id      A_active.     B_active.   C_active
 1         Y              N
 2         Y                           Y
 3                                     Y
+
+
+
+
+
+
+
+
+########################## player log_in problems ##########################
+
+## type 1: cumulative play time 
+
+
+-- method 1: use window function:
+
+select player_id, event_date,
+       sum (playting_time) over (partition by player_id order by event_date) as cumulative_playing_time
+from table 
+
+
+-- method 2: JOIN
+
+select a.player_id, a.event_id, sum(b.playing_time) as time. --> we need to add the one with ealier time (the smaller one)
+from table as a LEFT JOIN table as b
+     ON a.player_id = b.player_id AND a.event_date >= b.event_date
+group by a. player_id, a.event_id
+
+
+-- date 1 > date 2 means. date 2 is ealier.
+
+
+
+
+## type 2: day1 retension rate
+
+select round( 
+
+select count(distinct  player_id) 
+from activity a
+     JOIN (select player_id, min(event_date) as first_log_in_date
+           from activity
+           group by player_id ) as b
+     ON a.player_id = b.player_id AND a.event_date = date_add(b.first_log_in_date, interval 1 day) /
+     
+     (select count(distinct player_id) from activity)
+,2) as fraction
+
+
+
+
+
+### window function
+
+!!! cumulative sum
+when we do : 
+select sum(xx) over (parition by a order by b) as cum_sum
+Then the cumulative sum will be calculated by b (e.g., date)
+
+
+
+
+
+
+
+################# self join
+
+-- some condition can be directly put in where clause
+
+select a.name
+from emplyee a, employee b
+where a.manager_id = b.emplyee_id AND a.salary > b.salary
+
+
+-- consecutive number ( find all numbers that appear at least three times consecutively )
+
+select distinct a.num as ConsecutiveNumber
+from logs a, logs b, logs c
+where a.id + 1 = b.id AND b.id+1= c.id AND a.num=b.num AND b.num=c.num
+
+
+#################################  consecutive numbers 
+
+-- type 1: we only focus on the id column, to see whether id is consecutive or not:
+
+---> the difference between the id and the row_number
+
+( select id , row_number() over(order by id) as rn, id - (row_number() over(order by id)) as grp
+from table ) as tableA
+-- consecutive will have the same number
+
+now we can directly use table A:
+
+select grp, count(*)
+from tableA
+group by 1 -- It means to group by the first column regardless of what it's called. You can do the same with ORDER BY .
+## we will get how many consecutive there is in different consecutive group
+
+select grp, count(*)
+from tableA
+group by 1
+having count(*) >= 5
+## which group has more than 5 consecutive numbers
+
+
+-- type 2: when we have some other conditions from other columns. This selection will be done in the process of constructing table A.
+( select id , row_number() over(order by id) as rn, id - (row_number() over(order by id)) as grp
+from table
+where xxx>= 100 ) as tableA
+
+
+
+
+
+
+
+
+############## median:
+
+https://www.modb.pro/db/86488
