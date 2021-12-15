@@ -1,0 +1,56 @@
+################### pivot table ###################
+
+we have a table:
+
+id    Type.     Is_active
+1.     A           Y
+1      B           N
+2      A           Y
+2      C           Y
+3      C           Y
+
+
+-- step 1: add three columns (each distinct id will have one column)
+
+select id,
+case when type = 'A' Then is_active ELSE NULL END as A_active,
+case when type = 'B' Then is_active ELSE NULL END as B_active,
+case when type = 'C' Then is_active ELSE NULL END as C_active
+from table
+order by id
+
+the table will change to:
+
+id    Type.     Is_active.     A_active.      B_active.     C_active
+1.     A           Y             Y
+1      B           N                            N
+2      A           Y             Y
+2      C           Y                                           Y
+3      C           Y                                           Y
+
+
+-- step 2: Based on the table obtained above, we will group by id and then select the MAX() to put all information for each id in a single row:
+
+select id,
+MAX(when type = 'A' Then is_active ELSE NULL END) as A_active,
+MAX(when type = 'B' Then is_active ELSE NULL END) as B_active,
+MAX(when type = 'C' Then is_active ELSE NULL END) as C_active
+from table
+group by id
+order by id
+
+as group by id and the case when condition is the type, take A as the example:
+
+id       A_active.      B_active.     C_active
+1           Y
+1                          N
+
+we only have one element 'Y' in the A_activie column when id = 1, thus the max() must to Y.
+for type C, both cells are NULL, thus the max() will be NULL
+
+Thus we will have:
+
+id      A_active.     B_active.   C_active
+1         Y              N
+2         Y                           Y
+3                                     Y
