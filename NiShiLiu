@@ -1,0 +1,129 @@
+-- group_concat
+-- percent_rank(), cume_dist()
+-- ntile
+-- all about date: str_to_date(string,date_format), date_format(date,date_format), date_format: '%Y-%m-%d','%Y%m%d'
+                   date_add(date, interval num day/week/month), date_sub
+-- regular expression REGEXP()
+
+
+
+
+
+# Easy mistakes:
+count(*) null will be included
+count(column_name) null wil NOT be included
+
+
+
+
+
+##  group_concat: one to many search
+
+find the id for male and female students, like
+
+gender    id
+female.   01,02,08,09
+male.     12,14,22
+
+SELECT gender, group_concat(id) as id
+FROM table
+GROUP BY gender
+
+
+## aggregate function
+count(): count(*) will calculate the null cell, count(x) will not calculate the null cel
+avg()
+sum()
+max()
+min()
+first()
+last()
+
+## window function + aggregate function
+1. row_number() 1234, rank()1224, dese_rank() 1223
+2. sum() over(), count() over(), avg() over()
+3.percent_rank(),cume_dist()
+4.lag(expression,n), lead(expression,n) , n is the step size
+
+2 - slip window function - rows mode (according to physical row, i.e., product A, product B)
+                         - range mode (according to values)
+                         
+function() over([partition by] [order by] [frame])
+
+frame:
+unbounded preceding -- that the window starts at the first row of the partition
+expression preceding -- only allow rows mode
+current row
+expression following -- only allow rows mode
+unbounded folowing
+
+< Preceding refers to rows before the current row, where the following argument refers to rows after the current row.>
+
+example:
+select main_category, sub_category, year_month,sales, sum(sales) over (order by year_month ROWS/Range unbounded preceding) as sum_by_sub_cat
+from table
+rows: different product type in the same month are NOT the same
+range: different product type in the same month are  the same
+                         
+
+-> Cumulative Sum
+
+select main_category, sub_category, year_month, sales, sum(sales) over (partition by sub_category order by year_month) as cum_sum
+from table 
+( you can also change the sum here to other aggregate functions, like avg() ).
+
+
+## how to find the top 10% sales?
+
+PERCENT_RANK = (RANK – 1)/(COUNT -1)
+CUME_DIST = RANK/COUNT
+
+PERCENT_RANK returns the percent of values less than the current score. 
+CUME_DIST, which stands for cumulative distribution, returns the actual position of the score.
+
+example:
+SELECT product, percent_rank() over( order by sales DESC) as 'perent_rank',
+                cume_dist() over( oder by sales DESC) as 'cume_dist'
+FROM Table
+
+-- ntile():
+NTILE() function in SQL Server is a window function that distributes rows of an ordered partition into a pre-defined number of roughly equal groups.
+        break a result set into a specified number of buckets.
+NTILE (n) OVER( partition by xxx order by yyy)
+n: is the integer into which the rows are divided.
+
+for example, we still want the top 10%
+
+select product, ntile(10) over (order by sales DESC) as ntile_rank
+from table
+having ntile_rank = 1
+
+
+### DATE
+
+- change the string into date: STR_TO_DATE(string, format_mask)
+select_to_date('09/01/2009', '%m%d%y' ) as date
+
+
+- change the date format: DATE_FORMAT(date,format)
+DATE_FORMAT('2009/01/01', ' %Y - %m- %d')
+
+- split the date: 
+year(current_date)
+month(current_date)
+week(current_date)
+day(current_date)
+
+- change the time (ealier or later)
+
+- first day of this month: DATE_FORMAT(current_date, '%Y-%m-01')
+- last day of this month: last_day(current_date)
+-- two days ealier: date_sub (current_date, interval 2 day)
+-- two days later: date_add(current_date, interval 2 day)
+-- same day last month: date_sub(current_day, interval 1 month)
+
+
+### regular expression
+RegExp ' a|b'  RegExp '[0-9]'. RegExp '[a-zA-Z0-9]
+RegExp_like
+RegExp_extract
