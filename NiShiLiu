@@ -285,3 +285,4 @@ right join:
 join / inner join:
       ON: restrictions on the right table, use the satisfied partition to join the left table
       WHERE: the restrictions on the right table, the join with the left table, as remain the content satisfied the where condition
+      (here, the on and where can be considered as the SAME)
