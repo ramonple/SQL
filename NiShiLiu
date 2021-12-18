@@ -1,11 +1,18 @@
+-- Main Takeaway
 -- group_concat
 -- percent_rank(), cume_dist()
 -- ntile
 -- all about date: str_to_date(string,date_format), date_format(date,date_format), date_format: '%Y-%m-%d','%Y%m%d'
                    date_add(date, interval num day/week/month), date_sub
+                   unix_timestamp(current_date) -> change date to time stamp
+                   from_unixtime(time_stamp) -> change time stamp to date
+                   timestampdiff(day/month/year,datetime_expr1,datetime_expr2);
+
 -- regular expression REGEXP()
+-- YoY MoM use lag and lead:
+-- lag(expression,n), lead(expression,n) , n is the step size !
 
-
+-- how to get the slip average
 
 
 
@@ -43,9 +50,9 @@ last()
 1. row_number() 1234, rank()1224, dese_rank() 1223
 2. sum() over(), count() over(), avg() over()
 3.percent_rank(),cume_dist()
-4.lag(expression,n), lead(expression,n) , n is the step size
+4.lag(expression,n), lead(expression,n) , n is the step size !!!!
 
-2 - slip window function - rows mode (according to physical row, i.e., product A, product B)
+>>>>> 2 !!!!!!- < slip window function> - rows mode (according to physical row, i.e., product A, product B)
                          - range mode (according to values)
                          
 function() over([partition by] [order by] [frame])
@@ -61,6 +68,8 @@ unbounded folowing
 
 example:
 select main_category, sub_category, year_month,sales, sum(sales) over (order by year_month ROWS/Range unbounded preceding) as sum_by_sub_cat
+from table
+select main_category, sub_category, year_month,sales, sum(sales) over (order by year_month ROWS between 6 preceding and current row) as sum_by_sub_cat
 from table
 rows: different product type in the same month are NOT the same
 range: different product type in the same month are  the same
@@ -127,3 +136,152 @@ day(current_date)
 RegExp ' a|b'  RegExp '[0-9]'. RegExp '[a-zA-Z0-9]
 RegExp_like
 RegExp_extract
+
+
+############# date and time
+
+1. current time now(), current_date()
+select now() as current_time -- year-month-day-hour-minute-second
+select current_date -- year-month-day
+
+2. extract time: year(current_date),month(current_date),week(current_date),day(current_date)
+NOTICE: week - the week of this year
+        day - the day of this month
+        
+3. time stamp: date_add(current_date, interval x day/month/year)
+               date_sub(current_date, interval x day/month/year)
+               first day of this month: Date_sub(current_date, interval day(current_date) - 1  day)
+               last day of this month: last_day(current_date)
+               datediff(date('2021-09-21',date('2021-09-20')) as diff ( in most cases, we let date1 > date 2, date 1 later than date2
+               
+4.date partition and trasform
+             select unix_timestamp(current_date)
+             -- the output is 1632585600
+             select
+             from_unixtime(1632585600) as datetime_r,
+                  date(from_unixtime(1632585600)) as date_r
+             -- the output is:
+                 2021-09-26 00:00:00
+                 2021-09-26
+
+
+
+ ########## YoY, MoM: Use window function to calculate the YoY and MoM (year to year, month to month)
+ 
+ select
+     date('year_month') as year_month, sales,  
+     lag(sale,1) over(order by year_month) as lag_1_sales, -- the sales of last month
+     sales / lag(sale,1) over(order by year_month) - 1 as mom_growth.  -- current month sales/ last month sales - 1 = MOM
+ from 
+     table
+ 
+ 
+ 
+  select
+     date('year_month') as year_month, sales
+     lag(sale,12) over(order by year_month) as lag_1_sales, -- the sales of last month
+     sales / lag(sale,12) over(order by year_month) - 1 as yoy_growth.  -- current year sales/ last year sales - 1 = YOY
+ from 
+     table
+ 
+Slip average
+############## leetcode: average number for each 7 days (slipping average)
+sum(amount) over(order by visited_day rows between 6 preceding and current row) as sum_amount
+round(avg(sum) over (order by visited_day on rows between preceding 6 and current row),2) as avg_sum
+
+...
+where timestampdiff(day,(select min(visited_day) from table), visited_day)  >=6 
+ 
+
+
+
+########## Advanced Case When
+1. case when with aggerage function
+
+case when aggerage_function = 1 then aggerage_function else aggregate_function END
+group by xxx
+
+2. case when in case when
+
+case whne xx then xx else (case when xx then xx else xx end) end
+
+3. case when with sub-query
+
+case when x then xx when xx = (select ...) then xx end
+
+example 1&2:
+
+select student_id,
+       CASE
+       WHEN count(*) = 1 Then Max(club_id)
+       ELSE MAX( CASE
+       WHEN main_club_flag = 'Y' THEN club_id END)
+       END  as club_id
+from 
+      table
+Group by
+      student_id
+      
+why should we use max(club_id) instead of club_id? Because there is a group by, we should use the aggerage function
+
+example 3:
+
+    select
+         student_id,
+         case
+            when 
+               student_id IN (select student_id in table2)
+             then 
+               club_id
+             End as club_id
+    from
+         table 1
+         
+Never forget END!!!
+ELSE can be ignored, if there is no else, the output will be NULL
+
+
+### leetcode question: get the second last / last but one activity, if only have one activity, then output that activity
+
+WITH tmp AS ( -- we give each customer a tag, which represent whehter they have only one activity or not
+    select username
+          , case when count(startDate) > 1 THEN 1 ELSE 0 END) as over_1
+    from table1
+    group by username
+    ),
+    
+result AS (
+    select b.username,
+           case when over_1 = 1 then max(log_startDate) else startDate END as start_date
+    from (
+         select username, acitivity, startDate, endDate, 
+                lag(startDate,1) over (partition by username order by startDate) as lag_startDate
+         from table 1  ) as b
+    left join tmp on b.username = tmp.username
+    
+    Group by 1
+   )
+    
+    
+ select a.username,b.acitivty, a.startdate,b.enddate
+ from result as a 
+      left join table 1 as b on b.username = a.username
+                             and a.startDate=b.startDate
+         
+         
+         
+     
+######## Joining tables: ON or Where ??
+
+left join:
+      ON: restricts on right table and output the whole left table and the satisfied partition of the right table
+      WHERE: the restriction on the right table
+
+right join:
+       ON: restricts on left table and output the whole right table and the satisfied partition of the left table
+       WHERE: the restriction on the left table
+     
+
+join / inner join:
+      ON: restrictions on the right table, use the satisfied partition to join the left table
+      WHERE: the restrictions on the right table, the join with the left table, as remain the content satisfied the where condition
