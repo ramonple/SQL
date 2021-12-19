@@ -286,3 +286,82 @@ join / inner join:
       ON: restrictions on the right table, use the satisfied partition to join the left table
       WHERE: the restrictions on the right table, the join with the left table, as remain the content satisfied the where condition
       (here, the on and where can be considered as the SAME)
+
+
+
+#### ROLLUP
+
+The ROLLUP is an extension of the GROUP BY clause. 
+The ROLLUP option allows you to include extra rows that represent the subtotals, 
+which are commonly referred to as super-aggregate rows, along with the grand total row. 
+By using the ROLLUP option, you can use a single query to generate multiple grouping sets.
+
+Group By c1,c2,c3 WITH ROLLUP
+
+c1>c2>c3
+(c1,c2,c3)
+(c1,c2)
+(c1)
+0
+
+select
+    coalesce('year','TTL') as 'year',
+    coalesce(product, 'TTL') as product,
+    sum(sales) as sum_sales
+from table
+group by year, product with rollup
+
+-- COALESCE() Function Returns the first non-null value in a list   
+
+
+########### IFNULL/COALESCE/NULLIF
+-- deal with the NULL cells:
+ifnull( column, a) is column is null, replace by a
+ifnull(columnA,columnB, a) is column A is null, replace by column B; if B is null, replace by a
+-- check whether same or not:
+nullif(column1,clumn2) if column1=column2, then null; else column1
+
+
+### how to use self-join to rank
+select 
+   p1.product,
+   p1.price
+( select count(p2.price)
+  from product_info p2 
+  where p2.price > p1.price ) + 1 AS rank_1
+from
+  product_info as p1
+  
+  
+--- string
+left(), right(),substring()
+rtrim(),ltrim(),trim() -- The TRIM() function removes the space character OR other specified characters from the start or end of a string. 
+replace()
+concat(),concat_ws()
+
+left('apple',2) -> ap
+substring(<expression>,<starting_position>,length) -> substring('apple',1,1) > a (the start position is 1)
+
+rtrim(' apple') -> 'apple'
+
+replace(<string_expression1>,<string_expression2>,<string_expression3>), replace('apple','a','o') -> opple
+
+concat('apple','-','pen') -> apple-pen
+concat_ws('-','apple','pen') -> apple-pen
+
+
+
+
+-- duplicates
+
+select 
+     name, max(ID)
+from 
+     user_id
+group by name
+
+
+
+--- denominator = 0
+1. case when condition then result else end
+2. nullif(expression1, expression2)-> nullif(expression,0)
