@@ -365,3 +365,194 @@ group by name
 --- denominator = 0
 1. case when condition then result else end
 2. nullif(expression1, expression2)-> nullif(expression,0)
+
+
+---- row to column, column to row
+1. row to column
+
+##### a. CASE WHEN
+
+select student.id,
+       case when subject = 'Math' then score end as 'Math',
+       case when subject = 'English' then score end as 'English',
+       case when subject ='physical‘ then score end as 'physical'
+from table
+
+-> the output will be :  studend_id Math English physical
+                           1001.     97.   NULL.  NULL
+                           1001.     NULL.  98.   NULL
+                           1001.     Null   Null. 99
+Obviously, this is not what we want.
+To deal with this problem, we should use aggregative function, such as SUM(), MAX(), MIN(), AVG()
+
+select student.id,
+       sum(case when subject = 'Math' then score end) as 'Math',
+       sum(case when subject = 'English' then score end) as 'English',
+       sum(case when subject ='physical‘ then score end) as 'physical'
+from table
+group by student.id
+
+--> the output  sutdent_id Math English Physical
+                   1001     97.    98.    99
+                   1002.     97.   96.     92
+                   1003.     88.   null.   null
+
+       
+       
+
+#####  b. IF
+select student.id,
+       sum( if subject = 'Math', score ,0) as 'Math',
+       sum( if subject = 'English' ,  score ,0) as 'English',
+       sum( if subject ='physical‘ , score ,0) as 'physical'
+from table
+group by student.id
+
+the output  sutdent_id Math English Physical
+                   1001     97.    98.    99
+                   1002.     97.   96.    92
+                   1003.     88.   0.     0
+                   
+                   
+                   
+#### with ROLLUP
+
+select ifnull(student.id,sum) as student_id
+       sum( if subject = 'Math', score ,0) as 'Math',
+       sum( if subject = 'English' ,  score ,0) as 'English',
+       sum( if subject ='physical‘ , score ,0) as 'physical'
+from. (select 
+       student_id,
+       infull(subject, sum_score) as subject,
+       sum(score) as score,
+       group by student_id, subject with rollup
+       having student_id is not null
+       ) as a 
+group by sutdent)id with rollup
+
+the output  sutdent_id Math English Physical.  sum
+                   1001     97.    98.    99   294
+                   1002.    97.    96.    92.  285
+                   1003.    88.    0.     0    88 
+                   sum.     282.   194.  191   xxx
+                   
+ 
+ 
+ from column to row: UNION
+ 
+ select student_id, "math' as subject, math as score from table
+ UNION
+ select student_id, "english' as subject, english as score from table
+ UNION
+ select student_id, "physical' as subject, physical as score from table
+ 
+ 
+ 
+ 
+ -- second highest score
+ 1. limit
+ select * from table
+ LIMIT [offset],rows
+ 
+ offset: offset value, starts from which row, default = 0
+ rows: number of rows to output
+ 
+ LIMIT 5,10 ---> row 6-15
+ 
+ so, for the second highest score: limit(1,1)
+ 
+ 2. window function
+ 
+ 
+ 
+ -- Numbers
+ 
+ ------ 1
+ trancate(x,d)
+ - trancate(12.234,1) = 12.2
+ - trancate(12.234,0) = 12
+ - trancate(12.234,-1) = 10 -> delete all decimal parts and replace others with 0
+ 
+ round(x,y)
+ - round(12.356,2) = 12.236
+ - round(12.4567,1) = 12.5
+ 
+ ceil(x), ceiling(x)
+ ceil(12.324) = 13
+ 
+ floor(x)
+ floor(21.4235) = 21
+ 
+ 
+  ------ transfer string to number
+ 
+ CAST(value as type)
+ CONVERT(value, type)
+ 
+ select cast ('1.232' as signed) --> 1
+ select convert('1.232', signed) --> 1
+ 
+ select cast('1.232' as decimal(2,1)) -> 1.3
+ select convert('1.232',decimal(2,1)) -> 1.3
+ 
+ float number: decimal, interger: signed, non-mark integer: unsigned
+ 
+ 
+  ------ even or odd
+ select (3,2) -- 1
+ select 3 % 2 --> 1
+ 
+ mod(id,2) = 1: odd
+ mod(id,2) =0 :even
+ 
+ 
+ 
+ 
+ -- generate the index of row:
+ 
+ @row = @row + 1
+ step 1; define a new variable and set intial value at 0
+ step 2: run the whole loop, each time row =row + 1
+ 
+ student_id. gender
+ 1001.       male
+ 1002.       male
+ 1003.       female
+ 
+ 
+ select a.*, (@ROW := @ROW+1) rowNumber
+ from a, (select @ROW:=0) b _> @ROW:=0 can be considered as a variable, and the initial value = 0
+ 
+  student_id. gender. rowNumber
+ 1001.       male.      1
+ 1002.       male.      2
+ 1003.       female     3
+ 
+ =   a. operation, 
+     b. assign a value to a variable (must with set and update)
+ 
+ :=  assign a value to a variable
+ 
+ 
+ @ user defined variable
+ @@ in-built variable
+ 
+ 
+ 
+ 
+ 
+ 
+select a.*, (@ROW := case when gender = 'male' then @row + 1 else 0 end) rowNumber
+from a, (select @ROW:=0) b 
+
+   student_id. gender. rowNumber
+ 1001.       male.      1
+ 1002.       male.      2
+ 1003.       female     0.    -> for female, rowNumber = 0
+ 
+ 
+ 
+ 
+ 
+ 
+ 
