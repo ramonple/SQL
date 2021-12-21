@@ -4,12 +4,13 @@
 -- 1321: Moving Average
          ROWS PRECEDING and ROWS FOLLOWING
          Preceding refers to rows before the current row, where the following argument refers to rows after the current row. 
-         e.g., ROWS BETWEEN 3 preceding and current row - looks at three rows above the current row and current row -- MUST first 3 proceding and then current row
+         e.g., < ROWS BETWEEN 3 preceding and current row> - looks at three rows above the current row and current row -- MUST first 3 proceding and then current row
 
--- 1369 [Hard] -- use CASE WHEN in WHERE clause
-                  select xxx
-                  from table
-                  where Case when xx then xx else xx end
+-- 1369 [Hard] -- 1.  add one column represents how many activity each user has
+                  2.  use CASE WHEN in WHERE clause
+                      select xxx
+                      from table
+                      where Case when xx then xx else xx end
                  
                  
 -- 1384 [Hard] -- how to caculate the date difference
