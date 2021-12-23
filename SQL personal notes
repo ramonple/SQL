@@ -33,6 +33,14 @@ id    Type.     Is_active.     A_active.      B_active.     C_active
 
 select id,
 MAX(when type = 'A' Then is_active ELSE NULL END) as A_active,
+
+
+
+
+--- Calculate the Mode
+
+a. calculate the row_number as cte
+b. find the corresponding value with max( count(row_number))
 MAX(when type = 'B' Then is_active ELSE NULL END) as B_active,
 MAX(when type = 'C' Then is_active ELSE NULL END) as C_active
 from table
