@@ -193,3 +193,27 @@ inordr to avoid any mistake, we can order by with the primary key
    row_number () over (order by xxx, primary key ) as rn2,
    ...
    where rn1=rn2 or abs(rn1-rn2) = 1
+
+
+
+
+
+
+
+####### MODE
+
+
+
+WITH ModePrice
+AS
+(
+	SELECT OrderPrice,
+	ROW_NUMBER() 
+                  OVER (PARTITION BY OrderPrice ORDER BY OrderPrice) AS UnitPriceFrequency
+	FROM Orders
+)
+
+SELECT OrderPrice AS ModeOrderPrice
+FROM ModePrice
+WHERE UnitPriceFrequency IN 
+          (SELECT max(UnitPriceFrequency) FROM ModePrice)
