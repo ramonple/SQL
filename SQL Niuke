@@ -1,0 +1,19 @@
+--------- LIMIT [offset,] row_count
+
+The offset specifies the offset of the first row to return. The offset of the first row is 0, not 1.
+The row_count specifies the maximum number of rows to return.
+
+-- sql 2: find the employee whose hire-date is the last three lastest hire-date
+
+SELECT *
+FROM employees
+WHERE hire_date=(
+                SELECT DISTINCT hire_date
+                FROM employees
+                ORDER BY hire_date DESC
+                LIMIT 2,1
+                )
+                
+                
+                
+
