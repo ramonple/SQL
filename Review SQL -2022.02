@@ -369,3 +369,17 @@ OFFSET 1
 ROW_NUMBER() OVER() 123456
 RANK () OVER() 1224 -- leaving a hole
 DENSE_RANK() OVER()  1223 -- no holes
+
+
+
+##### LAG() and LEAD() ==> Window functions
+
+-- lag() Accesses data from a previous row
+
+LAG (scalar_expression [,offset] [,default])  
+    OVER ( [ partition_by_clause ] order_by_clause )  
+
+-- lead() Accesses data from a subsequent row
+
+LEAD ( scalar_expression [ ,offset ] , [ default ] )   
+    OVER ( [ partition_by_clause ] order_by_clause ) 
