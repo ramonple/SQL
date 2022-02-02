@@ -100,3 +100,254 @@ SELECT * FROM Products
 WHERE Price BETWEEN 10 AND 20
 AND CategoryID NOT IN (1,2,3);
 
+
+
+# SQL Aliases
+SQL aliases are used to give a table, or a column in a table, a temporary name.
+
+-- Alias Column Syntax
+SELECT column_name AS alias_name
+FROM table_name;
+
+-- Alisa Table Syntax
+SELECT column_name(s)
+FROM table_name AS alias_name;
+
+### SQL UNION
+SELECT column_name(s) FROM table1
+UNION
+SELECT column_name(s) FROM table2;
+
+
+### SQL HAVING Clause
+the HAVING clause was added to SQL because the WHERE keyword cannot be used with aggregate functions.
+
+SELECT column_name(s)
+FROM table_name
+WHERE condition
+GROUP BY column_name(s)
+HAVING condition
+ORDER BY column_name(s);
+
+
+### SQL EXISTS Operator
+The EXISTS operator is used to test for the existence of any record in a subquery.
+
+SELECT column_name(s)
+FROM table_name
+WHERE EXISTS
+(SELECT column_name FROM table_name WHERE condition);
+
+
+
+
+### SQL ANY & ALL
+
+-- any
+SELECT column_name(s)
+FROM table_name
+WHERE column_name operator ANY
+  (SELECT column_name
+  FROM table_name
+  WHERE condition);
+  
+
+
+-- all
+SELECT column_name(s)
+FROM table_name
+WHERE column_name operator ALL
+  (SELECT column_name
+  FROM table_name
+  WHERE condition);
+  
+  
+  
+### SQL SELECT INTO Statement
+-- The SELECT INTO statement copies data from one table into a [new] table
+SELECT *
+INTO newtable [IN externaldb]
+FROM oldtable
+WHERE condition;
+
+
+SELECT column1, column2, column3, ...
+INTO newtable [IN externaldb]
+FROM oldtable
+WHERE condition;
+
+
+
+
+### The SQL INSERT INTO SELECT Statement
+The INSERT INTO SELECT statement copies data from one table and inserts it into another table.
+
+INSERT INTO table2
+SELECT * FROM table1
+WHERE condition;
+
+INSERT INTO table2 (column1, column2, column3, ...)
+SELECT column1, column2, column3, ...
+FROM table1
+WHERE condition;
+
+
+
+
+### SQL CASE Statement
+The CASE statement goes through conditions and returns a value when the first condition is met
+So, once a condition is true, it will stop reading and return the result. 
+If no conditions are true, it returns the value in the ELSE clause.
+
+CASE
+    WHEN condition1 THEN result1
+    WHEN condition2 THEN result2
+    WHEN conditionN THEN resultN
+    ELSE result
+END;
+
+Example:
+SELECT OrderID, Quantity,
+CASE
+    WHEN Quantity > 30 THEN 'The quantity is greater than 30'
+    WHEN Quantity = 30 THEN 'The quantity is 30'
+    ELSE 'The quantity is under 30'
+END AS QuantityText
+FROM OrderDetails;
+
+
+
+### SQL NULL Functions
+-- SQL IFNULL(), ISNULL(), COALESCE(), and NVL() Functions
+
+1. The MySQL IFNULL() function lets you return an alternative value if an expression is NULL
+SELECT ProductName, UnitPrice * (UnitsInStock + IFNULL(UnitsOnOrder, 0))
+FROM Products;
+
+2. or we can use the COALESCE() function, like this:
+SELECT ProductName, UnitPrice * (UnitsInStock + COALESCE(UnitsOnOrder, 0))
+FROM Products;
+
+
+
+######## MySQL string functions
+-- CONCAT()
+adds two or more expressions together
+CONCAT(expression1, expression2, expression3,...)
+
+-- FIELD()
+returns the index position of a value in a list of values.
+FIELD(value, val1, val2, val3, ...) # the position of value in the string 'val1','val2','val3'
+---> if not exists, will return 0
+
+
+-- FIND_IN_SET() 
+returns the position of a string within a list of strings.
+FIND_IN_SET(string, string_list) --> string list:'a,b,c,d' MUST use comma
+
+
+-- FORMAT() 
+formats a number to a format like "#,###,###.##", rounded to a specified number of decimal places, then it returns the result as a string.
+FORMAT(number, decimal_places
+
+for example:
+SELECT FORMAT(250500.5634, 0); -> 250501
+
+
+-- LEFT()
+extracts a number of characters from a string (starting from left)
+LEFT(string, number_of_chars) # black space = 1 character
+
+-- LENGTH()
+returns the length of a string (in bytes)
+
+-- LOCATE()
+returns the position of the first occurrence of a substring in a string
+LOCATE(substring, string, start)
+
+SELECT LOCATE("com", "W3Schools.com", 3)
+
+
+-- Lower(), Upper()
+LOWER(text)
+Upper(text)
+
+
+
+--- TRIM()
+removes leading and trailing spaces from a string
+TRIM(string)
+
+
+-- SUBSTRING()
+extracts a substring from a string (starting at any position)
+
+SUBSTRING(string, start, length)
+OR 
+SUBSTRING(string FROM start FOR length)
+
+
+
+--SUBSTRING_INDEX()
+ returns a substring of a string before a specified number of delimiter occurs
+SUBSTRING_INDEX(string, delimiter, number)
+
+
+
+
+######### Numberic Functions
+ROUND() rounds a number to a specified number of decimal places
+ROUND(number, decimals)
+
+
+SIGN()
+Return the sign of a number
+ SIGN(number)
+If number > 0, it returns 1
+If number = 0, it returns 0
+If number < 0, it returns -1
+
+POWER(x, y) => x^y
+
+MOD(a,b) the remainder of a/b
+
+
+
+
+
+######### Date Function
+
+SELECT ADDDATE(date, INTERVAL value addunit)
+OR
+SELECT ADDDATE(date, days)
+
+
+SELECT CURDATE(); # current date
+SELECT CURRENT_DATE();
+SELECT CURRENT_TIME();
+SELECT CURRENT_TIMESTAMP();
+
+SELECT DATEDIFF(date1, date2)
+SELECT DATE_ADD(date, INTERVAL value addunit)
+
+
+DAYNAME(date)
+
+DAYNAME(date)
+DAYOFWEEK(date)
+DAYOFYEAR(date)
+
+
+EXTRACT(part FROM date)
+=== SELECT EXTRACT(MONTH FROM "2017-06-15") ==> 6
+part can be: SECOND, MINUTE, HOUR, DAY, WEEK, MONTH, QUATER, YEAR
+
+
+
+
+
+################ Advanced Functions
+COALESCE(val1, val2, ...., val_n)
+returns the first non-null value in a list
+
+
