@@ -383,3 +383,6 @@ LAG (scalar_expression [,offset] [,default])
 
 LEAD ( scalar_expression [ ,offset ] , [ default ] )   
     OVER ( [ partition_by_clause ] order_by_clause ) 
+
+
+-- Moving to GoodNotes
