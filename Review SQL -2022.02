@@ -385,4 +385,65 @@ LEAD ( scalar_expression [ ,offset ] , [ default ] )
     OVER ( [ partition_by_clause ] order_by_clause ) 
 
 
--- Moving to GoodNotes
+--- Consecutive numbers:
+a. self join" a.id = b.id - 1 where a.num = b.num
+b. lead() lag() -> refer to the info mentioned above
+
+
+--- Duplicates
+select x 
+from table 
+having count(x)>1
+
+select x 
+From ( select x,count(y) as num
+       from table
+       group by x   ) as tmp
+Where num > 1
+
+
+--- ROLLUP
+group by Rollup (x) 
+
+
+---- moving average
+
+[ ROW n Preceding / Following ] 
+[ ROW n Preceding BETWEEN m Following ] 
+
+select *, avg(x) over(order by y ROWS n Preceding / Following ) as moving_avg
+from table
+
+
+
+--- get the n^th highest
+--> create a funtion in SQL
+
+CREATE FUNCTION getNthHighestSalary(N INT) RETURNS INT
+BEGIN
+ DECLARE p INT;
+ SET p = N - 1;
+ RETURN (
+    SELECT * FROM
+     (SELECT DISTINCT Salary FROM Employee
+      ORDER BY Salary DESC
+      LIMIT 1 OFFSET p
+     ) AS getNthHighestSalary);
+END;
+
+CREATE FUNCTION [schema_name.]function_name (parameter_list)
+RETURNS data_type AS
+BEGIN
+    statements
+    RETURN value
+END
+
+
+
+
+
+
+
+
+
+
