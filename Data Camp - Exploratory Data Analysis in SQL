@@ -1,1 +1,14 @@
 Course 1: What's in the database
+
+
+Count the number of rows in a table with
+
+SELECT count(*) 
+  FROM tablename;
+  
+  
+Count missing Values
+
+SELECT count(*) - count(Column_name) as Missing
+From tablename;
+
