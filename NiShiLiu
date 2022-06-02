@@ -556,3 +556,18 @@ from a, (select @ROW:=0) b
  
  
  
+ lag、lead functions
+ https://www.bilibili.com/video/BV1Ea411j7n3?spm_id_from=333.999.0.0
+ 
+ 飞书链接：https://t9mvykf836.feishu.cn/docs/doccnkjkdVoGAlAum56JhQylMrb   密码：AhX6
+ 
+ 
+ function{} OVER{} ( Partition By {} OVER {} )
+ 
+ 
+ LeetCode 1454
+
+      
+ 
+  
+ 
