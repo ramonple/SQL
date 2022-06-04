@@ -224,11 +224,13 @@ from student
  Select  ROUND(TIMESTAMPDIFF(MONTH, sbirth, CURDATE())/12,1)-- CURDATE current date
  from student
 
+
 -- 32、查询平均成绩大于等于85的所有学生的学号、姓名和平均成绩（不重要
 select student.sid,student.sname,avg(score.sscore)
 from student JOIN score ON student.sid=score.sid
 Group by student.sid,student.sname
-Having avg(score.sscore>=85)
+Having avg(score.sscore) >=85
+
 
 -- 33、查询每门课程的平均成绩，结果按平均成绩升序排序，平均成绩相同时，按课程号降序排列（不重要）
 select course.cname,avg(score.sscore)
@@ -236,11 +238,14 @@ from course JOIN score ON score.cid=course.cid
 group by course.cname
 order by avg(score.sscore), course.cid DESC
 
+
 -- 34、查询课程名称为"数学"，且分数低于60的学生姓名和分数（不重点）
 select student.sname,score.sscore
 From student JOIN score ON student.sid=score.sid
              JOIN course ON course.cid=score.cid
 Where course.cname = "数学 " and score.sscore < 60
+
+
 
 -- 35、查询所有学生的课程及分数情况（重点）
 -- 每个人的信息都要出现在相同行
@@ -251,6 +256,8 @@ MAX(case when course.cid='03' Then score.sscore Else NULL END) AS 'COURSE3'
 From student JOIN score ON student.sid=score.sid
              JOIN course ON course.cid=score.cid
 GROUP BY student.sid
+
+
 
 -- 36、查询任何一门课程成绩在70分以上的姓名、课程名称和分数（重点）
 select student.sname,course.cname,score.sscore
