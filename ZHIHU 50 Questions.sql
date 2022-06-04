@@ -16,13 +16,29 @@ where sid='01')  AND sid<>'01')
  
  
  -- 12 !!!!!!!!!! 查询和“01”号同学所学课程完全相同的其他同学的学号(重点)
-select  sid From score
-where sid <>'01'
-group by sid having count(distinct cid) = (select count(distinct cid) from score where sid='01')
-AND sid NOT IN
-( select distinct sid from score
-where cid NOT IN
-(select cid from score where sid='01') )
+ ---》 第一是满足选课数量与01相同，另一方面需要满足不包含01没选的课程
+
+select s_id from student
+
+where s_id in
+( 
+select distinct s_id from score
+where s_id <> '01'
+group by s_id 
+Having count(distinct c_id) = (select count(distinct c_id) from score where s_id ='01')
+)
+
+and s_id not in
+(
+select distinct s_id from score
+where c_id not in
+	(
+		select c_id from score
+		where s_id ='01'
+	)
+)
+
+
 
 
 -- 15 查询两门及其以上不及格课程的同学的学号，姓名及其平均成绩（重点）
