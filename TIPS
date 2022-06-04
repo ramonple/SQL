@@ -1,4 +1,4 @@
-LIKE
+------------ LIKE
 
 LIKE Operator	Description
 WHERE CustomerName LIKE 'a%'	Finds any values that start with "a"
@@ -8,6 +8,17 @@ WHERE CustomerName LIKE '_r%'	Finds any values that have "r" in the second posit
 WHERE CustomerName LIKE 'a_%'	Finds any values that start with "a" and are at least 2 characters in length
 WHERE CustomerName LIKE 'a__%'	Finds any values that start with "a" and are at least 3 characters in length
 WHERE ContactName LIKE 'a%o'	Finds any values that start with "a" and ends with "o"
+
+
+------------- Date_add
+
+DATE_ADD(date, INTERVAL value addunit)
+
+addunit: second, minute, hour, day, week, month, quarter, year
+
+
+SELECT DATE_ADD("2017-06-15 09:34:21", INTERVAL 15 MINUTE);
+---> 2017-06-15 09:49:21
 
 
 
