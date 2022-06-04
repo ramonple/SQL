@@ -1,4 +1,4 @@
--- 重点题目： Q12， Q17, Q18, Q23,Q35, Q40, Q41
+-- 重点题目： Q12， Q17, Q18(各种率，eg及格率）, Q23,Q35, Q40, Q41
 -- CANNOT run window function with this version of MySql. WILL update in another file.
 -- Window funtion: Q: 22, 25
 
@@ -43,11 +43,29 @@ where c_id not in
 
 -- 15 查询两门及其以上不及格课程的同学的学号，姓名及其平均成绩（重点）
 
+# Method 1:
 select student.sid,student.sname,avg(score.sscore)
-from student JOIN score ON student.sid = score.sid
+from student 
+  JOIN score 
+  ON student.sid = score.sid
 Where score.sscore < 60
 group by student.sid
 Having count(student.sid) >= 2
+
+# Method 2:
+select a.s_id, a.s_name, b.mean
+from student as a
+inner join
+(
+	select s_id, avg(s_score) as mean
+	from score
+	group by s_id
+	having count(distinct c_id) >=2
+) as b
+on a.s_id = b.s_id
+
+
+
 
 -- 16 检索"01"课程分数小于60，按分数降序排列的学生信息（和34题重复，不重点）
 select student.*,score.sscore
@@ -61,6 +79,8 @@ Order By score.sscore DESC
 -- 2.因为GROUP UP 要与select 列一致，所以case when 加修饰max
 -- 3.因为最后要展现出每个同学的各科成绩为一行，所以用到case
 -- IMPORTANT !!!!! use aggregation functions as new column name to avoid group by
+
+# Method 1:
 select
 sid,
 MAX(CASE WHEN cid='01' Then sscore ELSE NULL END) "Chinese", -- NULL！！ 这一列只有一科成绩，一定是最大。如果没有，就用null
@@ -69,6 +89,13 @@ MAX(CASE WHEN cid='03' Then sscore ELSE NULL END) " English",
 avg(sscore)
 from score
 group by sid
+
+# Method 2:
+select s_id,c.c_name,s_score, avg(s_score) over (partition by s_id) as avg
+from score as sc
+JOIN course as c
+on sc.c_id=c.c_id
+order by avg desc
 
 
 -- 18 查询各科成绩最高分、最低分和平均分：以如下形式显示：课程ID，课程name，最高分，最低分，平均分，及格率，中等率，优良率，优秀率
@@ -107,38 +134,47 @@ from score JOIN course ON score.cid = course.cid
 Group by teacher.Tid
 Order by avgscore DESC
 
+
 -- 22、查询所有课程的成绩第2名到第3名的学生信息及该课程成绩（重要 25类似）
 -- this is question, it is more suitable for row number 
 select *
 From (select student.*,course.*, row_number () OVER (partition by course.cid Order By score.sscore DESC) as ra)
       From score JOIN course ON score.cid = course.cid
-           JOIN Teacher ON teacher.tid = course.tid ) as A  -- MUST name this within query
+                 JOIN Teacher ON teacher.tid = course.tid ) as A  
 Where ra IN (2,3)
+
+
 
 -- 23、使用分段[100-85],[85-70],[70-60],[<60]来统计各科成绩，分别统计各分数段人数：课程ID和课程名称(重点和18题类
 
+# Method 1:
 -- !!! there can not exist black space between sum and parenthese
 select course.cid, course.cname,score.sscore,
-sum(cASE WHEN score.sscore <= 100 AND score.sscore > 85 Then 1 ELSE 0 END) AS "100-85",
-sum(cASE WHEN score.sscore <= 85 AND score.sscore > 70 Then 1 ELSE 0 END) AS "85-70",
-sum(caSE WHEN score.sscore <= 70 AND score.sscore > 60 Then 1 ELSE 0 END) AS "70-60",
-sum(case when score.sscore <= 60 Then 1 else 0 end) AS "<60"
+sum(CASE WHEN score.sscore <= 100 AND score.sscore > 85 Then 1 ELSE 0 END) AS "100-85",
+sum(CASE WHEN score.sscore <= 85 AND score.sscore > 70 Then 1 ELSE 0 END) AS "85-70",
+sum(CASE WHEN score.sscore <= 70 AND score.sscore > 60 Then 1 ELSE 0 END) AS "70-60",
+sum(CASE WHEN score.sscore <= 60 Then 1 else 0 end) AS "<60"
 From course JOIN score ON course.cid = score.cid
 group by course.cid,course.cname
 
+
+# Method 2:
 -- when you want to use COUNT instead of SUM, you must use NULL instead of 0
 select course.cid, course.cname,score.sscore,
-count(cASE WHEN score.sscore <= 100 AND score.sscore > 85 Then 1 ELSE NULL END) AS "100-85",
-count(cASE WHEN score.sscore <= 85 AND score.sscore > 70 Then 1 ELSE NULL END) AS "85-70",
-count(caSE WHEN score.sscore <= 70 AND score.sscore > 60 Then 1 ELSE NULL END) AS "70-60",
-count(case when score.sscore <= 60 Then 1 else NULL end) AS "<60"
+count(CASE WHEN score.sscore <= 100 AND score.sscore > 85 Then 1 ELSE NULL END) AS "100-85",
+count(CASE WHEN score.sscore <= 85 AND score.sscore > 70 Then 1 ELSE NULL END) AS "85-70",
+count(CASE WHEN score.sscore <= 70 AND score.sscore > 60 Then 1 ELSE NULL END) AS "70-60",
+count(CASE WHEN score.sscore <= 60 Then 1 else NULL end) AS "<60"
 From course JOIN score ON course.cid = score.cid
 group by course.cid,course.cname
+
+
 
 -- 24、查询学生平均成绩及其名次（同19题，重点）
 select student.sid,student.sname,avg(score.sscore),
 RANK () OVER (Partition By student.sid Order By avg(score.sscore) DESC) as Ranking
 from  studnet JOIN score ON student.sid=score.sid
+
 
 -- 25、查询各科成绩前三名的记录（不考虑成绩并列情况）（重点 与22题类似）
 select score.cid,score
@@ -146,19 +182,24 @@ MAX(case when m = 1 then scoure.sscore else null end) as "No.1",
 MAX(case when m = 2 then scoure.sscore else null end) as "No.2",
 MAX(case when m = 3 then scoure.sscore else null end) as "No.3",
 from  (select student.*, course.cid,course.score,row_number() over (partition by score.cid Order by score.sscore DESC) as m
-       from  studnet JOIN score ON student.sid=score.sid ) as a
+       from  studnet 
+       JOIN score 
+       ON student.sid=score.sid ) as a
 where m IN (1,2,3)
- 
+
+
 -- 26、查询每门课程被选修的学生数(不重点)
 select course.cname, count(score.sid)
 from course JOIN score ON course.cid=score.cid
 group by course.cid,course.cname
 
--- 7、 查询出只有两门课程的全部学生的学号和姓名(不重点)
+
+-- 27、 查询出只有两门课程的全部学生的学号和姓名(不重点)
 select student.sid,student.sname
 from student JOIN score ON student.sid=score.sid
 Group by student.sid
 Having count(score.sid) =2
+
 
 -- 28、查询男生、女生人数(不重点)
 select ssex, count(Ssex)
