@@ -250,9 +250,9 @@ Where course.cname = "数学 " and score.sscore < 60
 -- 35、查询所有学生的课程及分数情况（重点）
 -- 每个人的信息都要出现在相同行
 select student.sid,student.sname,score.sscore,
-MAX(case when course.cid='01' Then score.sscore Else NULL END) AS 'COURSE1',
-MAX(case when course.cid='02' Then score.sscore Else NULL END) AS 'COURSE2',
-MAX(case when course.cid='03' Then score.sscore Else NULL END) AS 'COURSE3'
+MAX(case when course.cid='01' Then score.sscore ELSE NULL END) AS 'COURSE1',
+MAX(case when course.cid='02' Then score.sscore ELSE NULL END) AS 'COURSE2',
+MAX(case when course.cid='03' Then score.sscore ELSE NULL END) AS 'COURSE3'
 From student JOIN score ON student.sid=score.sid
              JOIN course ON course.cid=score.cid
 GROUP BY student.sid
@@ -265,6 +265,8 @@ From student JOIN score ON student.sid=score.sid
              JOIN course ON course.cid=score.cid
 Where score.sscore > 70
 
+
+
 -- 37、查询不及格的课程并按课程号从大到小排列(不重点)
 select course.cid,student.sname,course.cname,score.sscore
 From student JOIN score ON student.sid=score.sid
@@ -272,26 +274,33 @@ From student JOIN score ON student.sid=score.sid
 Where score.sscore < 60
 Order By course.cid DESC
 
+
+
 -- 38、查询课程编号为03且课程成绩在80分以上的学生的学号和姓名（不重要）
 select course.cid,student.sname,course.cname,score.sscore
 From student JOIN score ON student.sid=score.sid
              JOIN course ON course.cid=score.cid
 Where score.sscore > 80 AND course.cid = '03'
 
+
+
 -- 39、求每门课程的学生人数（不重要）
-select course.cid,course.cname,count(DISTINCT score.sid)
+select course.cid, course.cname, count(DISTINCT score.sid)
 From score JOIN course ON course.cid=score.cid
-Group by course.cid,course.cname
+Group by course.cid, course.cname
+
+
 
 -- 40、查询选修“张三”老师所授课程的学生中成绩最高的学生姓名及其成绩（重要top）
 
 select student.sid,student.sname,score.sscore
 From student JOIN score ON student.sid=score.sid
              JOIN course ON course.cid=score.cid
-						 JOIN teacher ON teacher.tid=course.tid
+	     JOIN teacher ON teacher.tid=course.tid
 Where teacher.tname="张三"
 Order by score.sscore DESC
 Limit 1
+
 -- 这是一种新思路，还是得记一下。我一直想用max 然后where score= (). 太麻烦了
 
 select student.sid, student.sname,score.sscore
@@ -309,6 +318,8 @@ From student
              JOIN course ON course.cid=score.cid
 						 JOIN teacher ON teacher.tid=course.tid
 Where teacher.tname="张三")
+
+
 
 -- 41.查询不同课程成绩相同的学生的学生编号、课程编号、学生成绩 （重点）
 -- 自己写错了
@@ -354,11 +365,14 @@ from score JOIN course ON score.cid = course.cid
 Group by score.cid
 Having count(sid) > 5
 
+
+
 -- 44、检索至少选修两门课程的学生学号（不重要）
 select sid,count(sid)
 from score
 group by sid
 having count(sid) >= 2
+
 
 -- 45、 查询选修了全部课程的学生信息（重点划红线地方
 select student.*,count(score.sid)
@@ -368,9 +382,12 @@ group by score.sid
 having count(score.sid)=
 (select count(cid) from course)
 
+
 -- 46. 查询各个人的年龄
-select round(DateDiff(NOw(),sbirth)/365,1)
+select round(DateDiff(NOW(),sbirth)/365,1)
 from student
+
+
 
 -- 47、查询没学过“张三”老师讲授的任一门课程的学生姓名
 select *
@@ -382,6 +399,8 @@ where score.cid IN (
 select course.cid
 from course JOIN teacher ON course.tid=teacher.tid
 where teacher.Tname ="张三" ))
+
+
 
 -- 48、查询下周过生日同学
 -- 出生年份的第几周，不一定是今年的第几周。我们算他们今年几号过生日，然后看看是不是在下周
