@@ -22,4 +22,12 @@ SELECT DATE_ADD("2017-06-15 09:34:21", INTERVAL 15 MINUTE);
 
 
 
+------------- TIMESTAMPDIFF()
 
+TIMESTAMPDIFF(unit,datetime_expr1,datetime_expr2);
+
+ SELECT TIMESTAMPDIFF(MONTH,'2009-05-18','2009-07-29'); 
+ ---->  2
+ 
+ 
+ 
