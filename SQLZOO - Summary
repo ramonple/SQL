@@ -1,0 +1,106 @@
+1. Select Bascis
+
+
+--- IN
+
+Select xxx,xxxx
+From xxxx
+Where xx IN ('xxx','xxx',xxxx')
+
+
+----- Between 
+
+Select xxx,xxxx
+From xxxx
+Where xx BETWEEN a AND b
+
+
+
+---- Like
+#     Show the countries which have a name that includes the word 'United'
+  select name
+  from world
+  where name LIKE '%United%' 
+
+
+
+-----  One or the other (but not both)
+
+# Exclusive OR (XOR). Show the countries that are big by area (more than 3 million) or big by population (more than 250 million) but not both. 
+
+  SELECT name, population, area
+  FROM world
+  WHERE (population > 250000000 OR area > 3000000) 
+       AND NOT (population > 250000000 AND area > 3000000)
+       
+       
+       
+       
+       
+--- Round 
+for example, round to 10000
+           > round(xxxx,-4)   how many zeros = how many -x
+
+per capita 人均        
+
+# Show per-capita GDP for the trillion dollar countries to the nearest $1000.
+select name, round(GDP/population,-3)
+from world
+where GDP >= 1000000000000
+
+
+
+
+
+--- LENGTH
+     You can use the LENGTH function to find the number of characters in a string
+     For Microsoft SQL Server the function LENGTH is LEN
+     
+     
+
+
+----- You can use the function LEFT to isolate the first character.
+      You can use <> as the NOT EQUALS operator.
+      
+      
+SELECT name, capital
+from world
+where LEFT(name,1) = LEFT(capital,1) AND NOT name = capital
+
+
+
+
+--- Find the country that has all the vowels and no spaces in its name.
+vowels (a e i o u)
+
+
+select name 
+from world 
+where name like'%a%' and name like'%e%' 
+  and name like'%i%' and name like'%o%' 
+  and name like'%u%' and name not like'% %'
+
+
+
+
+---- Apostrophe
+# Find all details of the prize won by EUGENE O'NEILL
+
+
+select * from nobel where winner like'EUGENE O''NEILL'    ## double '' to replace the ' in the name
+
+
+
+
+
+----- Chemistry and Physics last
+
+# Show the 1984 winners and subject ordered by subject and winner name; but list chemistry and physics last.
+
+SELECT winner, subject
+FROM nobel
+WHERE yr=1984
+ORDER BY subject IN ('Physics','Chemistry'), subject, winner
+
+
+
