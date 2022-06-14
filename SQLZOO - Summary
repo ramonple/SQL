@@ -121,3 +121,19 @@ ORDER BY subject IN ('Physics','Chemistry'), subject, winner
 
 
 
+
+
+---------------- NULL ---------------
+We can use the phrase IS NULL to pick out fields. We can use IS NOT NULL similarly.
+
+
+-------------- COALESCE ---------------------
+Return the first non-null value in a list:
+
+SELECT COALESCE(NULL, NULL, NULL, 'W3Schools.com', NULL, 'Example.com');
+>>>>>>>>> 
+W3Schools.com
+
+
+
+
