@@ -184,13 +184,13 @@ https://www.modb.pro/db/86488
 
 -- the method I like the most:
    row_number () over( order by xxx ) as rn1,
-   row_number () over (order by xxx ) as rn2,
+   row_number () over (order by xxx DESC ) as rn2,
    ...
    where rn1=rn2 or abs(rn1-rn2) = 1
    
 inordr to avoid any mistake, we can order by with the primary key
    row_number () over( order by xxx, primary key ) as rn1,
-   row_number () over (order by xxx, primary key ) as rn2,
+   row_number () over (order by xxx, primary key DESC ) as rn2,
    ...
    where rn1=rn2 or abs(rn1-rn2) = 1
 
